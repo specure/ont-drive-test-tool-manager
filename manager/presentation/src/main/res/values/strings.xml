@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="delete">Delete</string>
+    <string name="signal_tracker_manager">Signal tracker manager</string>
+</resources>
