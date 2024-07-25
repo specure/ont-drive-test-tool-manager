@@ -2,4 +2,8 @@
 <resources>
     <string name="delete">Delete</string>
     <string name="signal_tracker_manager">Signal tracker manager</string>
+    <string name="please_connect_signal_tracking_device">Please connect a signal tracking device.</string>
+    <string name="updated_at">Updated:</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
 </resources>

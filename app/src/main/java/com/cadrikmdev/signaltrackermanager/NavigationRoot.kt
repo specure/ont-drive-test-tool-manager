@@ -30,14 +30,7 @@ private fun NavGraphBuilder.mainGraph(
         route = "main"
     ) {
         composable("home") {
-            ManagerOverviewScreenRoot(
-                onStartRunClick = {
-                    // TODO:
-                },
-                onStopRunClick = {
-                    // TODO:
-                },
-            )
+            ManagerOverviewScreenRoot()
         }
     }
 }
