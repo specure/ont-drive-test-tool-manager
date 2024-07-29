@@ -13,10 +13,14 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.timber)
 
+    implementation(projects.core.connectivity.domain)
+
     implementation(projects.core.domain)
     implementation(projects.core.presentation.ui)
 
     implementation(projects.manager.domain)
+    implementation(projects.permissions.domain)
+    implementation(projects.permissions.presentation)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

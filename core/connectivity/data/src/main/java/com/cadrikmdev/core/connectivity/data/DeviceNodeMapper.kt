@@ -5,7 +5,7 @@ import com.google.android.gms.wearable.Node
 
 fun Node.toDeviceNode(): DeviceNode {
     return DeviceNode(
-        id = id,
+        address = id,
         displayName = displayName,
         isNearby = isNearby
     )

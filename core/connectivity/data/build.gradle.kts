@@ -14,7 +14,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.play.services.wearable)
     implementation(libs.bundles.koin)
+    implementation(libs.timber)
 
     implementation(projects.core.domain)
     implementation(projects.core.connectivity.domain)
+    implementation(project(":manager:domain"))
 }
