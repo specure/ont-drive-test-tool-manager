@@ -6,7 +6,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
-import android.bluetooth.BluetoothGattService
+import android.bluetooth.BluetoothProfile
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -15,20 +15,32 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.cadrikmdev.core.connectivity.data.mappers.toDeviceNode
+import com.cadrikmdev.core.connectivity.domain.BluetoothError
 import com.cadrikmdev.core.connectivity.domain.DeviceNode
 import com.cadrikmdev.core.connectivity.domain.DeviceType
 import com.cadrikmdev.core.connectivity.domain.TrackerManagerDiscovery
+import com.cadrikmdev.domain.util.Result
 import com.cadrikmdev.manager.domain.ManagerControlServiceProtocol
 import com.google.android.gms.common.api.ApiException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class BluetoothNodeDiscovery(
-    private val context: Context
+    private val context: Context,
+    private val applicationScope: CoroutineScope,
 ) : TrackerManagerDiscovery {
+
+    private var _pairedDevices = MutableStateFlow<Set<BluetoothDevice>>(setOf())
+    val pairedDevices = _pairedDevices.asStateFlow()
 
     @SuppressLint("MissingPermission")
     override fun observeConnectedDevices(localDeviceType: DeviceType): Flow<Set<DeviceNode>> {
@@ -103,7 +115,11 @@ class BluetoothNodeDiscovery(
                     val action = intent.action
                     val pairedDevices = getPairedDevices(bluetoothAdapter)
                     Timber.d("Updating paired devices: $pairedDevices")
-                    trySend(pairedDevices)
+
+                    val pairedNodes = pairedDevices.mapNotNull {
+                        it.toDeviceNode()
+                    }?.toSet() ?: setOf()
+                    trySend(pairedNodes)
 
                     if (action == BluetoothDevice.ACTION_BOND_STATE_CHANGED) {
                         val device =
@@ -136,8 +152,16 @@ class BluetoothNodeDiscovery(
         bluetoothAdapter: BluetoothAdapter
     ): Boolean {
         try {
-            val pairedDevices: Set<DeviceNode> = getPairedDevices(bluetoothAdapter)
-            send(pairedDevices)
+            val pairedDevices: Set<BluetoothDevice> = getPairedDevices(bluetoothAdapter)
+//            val pairedDevicesWithSupportedService = pairedDevices.forEach { deviceNode ->
+//                val device = bluetoothAdapter.getRemoteDevice(deviceNode.address)
+//                connectToDevice(device) { connectedDeviceNode ->
+//                    trySend(pairedDevices.filter { it.address == connectedDeviceNode.address }.toSet())
+//                }
+//            }
+            Timber.d("Obtaining paired devices ${pairedDevices}")
+            val pairedNodes = pairedDevices.mapNotNull {it.toDeviceNode()}.toSet()
+            trySend(pairedNodes)
         } catch (e: ApiException) {
             awaitClose()
             return true
@@ -145,47 +169,115 @@ class BluetoothNodeDiscovery(
         return false
     }
 
-    private fun getPairedDevices(bluetoothAdapter: BluetoothAdapter): Set<DeviceNode> {
-        val pairedDevices: Set<DeviceNode> = if (ActivityCompat.checkSelfPermission(
+    private fun getPairedDevices(bluetoothAdapter: BluetoothAdapter): Set<BluetoothDevice> {
+        val pairedDevices: Set<BluetoothDevice> = if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.BLUETOOTH_CONNECT
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             setOf()
         } else {
-            bluetoothAdapter?.bondedDevices?.map {
-                DeviceNode(
-                    address = it.address,
-                    displayName = it.name,
-                    isNearby = it.bondState == BluetoothDevice.BOND_BONDED,
-                    type = it.type
-                )
-            }?.toSet() ?: setOf()
+            bluetoothAdapter.bondedDevices
+        }
+        applicationScope.launch {
+            _pairedDevices.emit(pairedDevices)
         }
         return pairedDevices
     }
 
-    private fun connectToDevice(device: BluetoothDevice) {
+    override suspend fun connectToDevice(deviceAddress: String): Result<Boolean, BluetoothError> {
         // Ensure the location permission is granted (required for Bluetooth discovery from Android M+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return
+        if (isFineLocationPermissionGranted()) return Result.Error(BluetoothError.NO_FINE_LOCATION_PERMISSIONS)
+        if (!isBluetoothConnectPermissionGranted()) {
+            return Result.Error(BluetoothError.MISSING_BLUETOOTH_CONNECT_PERMISSION)
         }
 
+        val bluetoothDevice = getBluetoothDeviceFromDeviceAddress(deviceAddress)
+            ?: return Result.Error(BluetoothError.BLUETOOTH_DEVICE_NOT_FOUND)
+
+        // Use CompletableDeferred to wait for the result
+        val resultDeferred = CompletableDeferred<Result<Boolean, BluetoothError>>()
+
         // Connect to the device and discover services
-        device.connectGatt(context, false, object : BluetoothGattCallback() {
-            override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-                if (status == BluetoothGatt.GATT_SUCCESS) {
-                    gatt?.services?.forEach { service: BluetoothGattService ->
-                        if (service.uuid == ManagerControlServiceProtocol.customServiceUUID) {
-                            Timber.d("Device supports custom service: ${device.name}")
-                            // Device supports the custom service - you can proceed with communication
-                        }
-                    }
+        val callback = object : BluetoothGattCallback() {
+            override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+                if (!isBluetoothConnectPermissionGranted()) {
+                    resultDeferred.complete(Result.Error(BluetoothError.MISSING_BLUETOOTH_CONNECT_PERMISSION))
+                    Timber.e("Missing Bluetooth connect permissions")
+                    return
+                }
+
+                if (newState == BluetoothProfile.STATE_CONNECTED) {
+                    Timber.d("Connected to GATT server.")
+                    gatt?.discoverServices()
+                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                    Timber.d("Disconnected from GATT server.")
+                    gatt?.close()
+                    resultDeferred.complete(Result.Error(BluetoothError.GATT_DISCONNECTED))
                 }
             }
 
+            override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
+                if (!isBluetoothConnectPermissionGranted()) {
+                    resultDeferred.complete(Result.Error(BluetoothError.MISSING_BLUETOOTH_CONNECT_PERMISSION))
+                    Timber.e("Missing Bluetooth connect permissions")
+                    return
+                }
+
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    Timber.d("GATT services: ${gatt?.services}")
+                    val service = gatt?.services?.firstOrNull {
+                        it.uuid == ManagerControlServiceProtocol.customServiceUUID
+                    }
+                    if (service != null) {
+                        Timber.d("Device supports custom service: ${bluetoothDevice.name}")
+                        resultDeferred.complete(Result.Success(true))
+                    } else {
+                        resultDeferred.complete(Result.Error(BluetoothError.SERVICE_NOT_FOUND))
+                    }
+                    gatt?.close()
+                } else {
+                    Timber.e("onServicesDiscovered received: $status")
+                    resultDeferred.complete(Result.Error(BluetoothError.SERVICE_DISCOVERY_FAILED))
+                    gatt?.close()
+                }
+            }
             // Handle other callback methods as needed
-        })
+        }
+
+        val gatt = bluetoothDevice.connectGatt(context, true, callback)
+            ?: return Result.Error(BluetoothError.GATT_CONNECTION_FAILED)
+        // Handle the case if the connection fails to establish initially
+
+        return  resultDeferred.await()
+        // Wait for the connection and services discovery to complete
+        // You may need to implement additional logic to handle timeouts or state changes
+    }
+
+    private fun isFineLocationPermissionGranted(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+    }
+
+
+    private fun isBluetoothConnectPermissionGranted() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        ActivityCompat.checkSelfPermission(
+            context,
+            Manifest.permission.BLUETOOTH_CONNECT
+        ) == PackageManager.PERMISSION_GRANTED
+    } else {
+        true
+    }
+
+    private fun getBluetoothDeviceFromDeviceAddress(deviceAddress: String): BluetoothDevice? {
+        return try {
+            _pairedDevices.value.first { it.address == deviceAddress }
+        } catch (e: NoSuchElementException) {
+            e.printStackTrace()
+            null
+        }
     }
 }

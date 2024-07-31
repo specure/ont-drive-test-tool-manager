@@ -7,6 +7,6 @@ fun Node.toDeviceNode(): DeviceNode {
     return DeviceNode(
         address = id,
         displayName = displayName,
-        isNearby = isNearby
+        isPaired = isNearby
     )
 }

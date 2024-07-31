@@ -37,9 +37,9 @@ import kotlin.time.toDuration
 @Composable
 fun ManagedDeviceListItem(
     trackingDeviceUi: TrackingDeviceUi,
-    onDeleteClick: (id: String) -> Unit,
-    onStartClick: (id: String) -> Unit,
-    onStopClick: (id: String) -> Unit,
+    onDeleteClick: (address: String) -> Unit,
+    onStartClick: (address: String) -> Unit,
+    onStopClick: (address: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showDropDown by remember {
@@ -64,7 +64,7 @@ fun ManagedDeviceListItem(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = trackingDeviceUi.id,
+                text = trackingDeviceUi.name,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
@@ -90,10 +90,10 @@ fun ManagedDeviceListItem(
                 )
             }
             SignalTrackerManagerActionButton(text = stringResource(id = R.string.start), modifier = Modifier.weight(1f), isLoading = false) {
-                onStartClick(trackingDeviceUi.id)
+                onStartClick(trackingDeviceUi.address)
             }
             SignalTrackerManagerActionButton(text = stringResource(id = R.string.stop), modifier = Modifier.weight(1f), isLoading = false) {
-                onStopClick(trackingDeviceUi.id)
+                onStopClick(trackingDeviceUi.address)
             }
         }
     }
@@ -109,7 +109,7 @@ fun ManagedDeviceListItem(
             },
             onClick = {
                 showDropDown = false
-                onDeleteClick(trackingDeviceUi.id)
+                onDeleteClick(trackingDeviceUi.name)
             },
         )
     }
@@ -121,7 +121,8 @@ private fun RunListItemPreview() {
     SignalTrackerManagerTheme {
         ManagedDeviceListItem(
             trackingDeviceUi = TrackingDeviceUi(
-                id = "Telephone model name",
+                name = "Telephone model name",
+                address = "47:51:53:55:88:56:FE",
                 status = "running",
                 updateTimestamp = 15616561513
             ),

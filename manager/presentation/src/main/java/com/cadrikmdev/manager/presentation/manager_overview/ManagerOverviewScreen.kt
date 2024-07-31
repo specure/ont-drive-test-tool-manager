@@ -135,14 +135,14 @@ private fun ManagerOverviewScreen(
                     items(
                         items = state.managedDevices,
                         key = {
-                            it.id
+                            it.address
                         }
                     ) {
                         ManagedDeviceListItem(
                             trackingDeviceUi = it,
-                            onDeleteClick = { id -> onAction(ManagerOverviewAction.DeleteManager(id)) },
-                            onStopClick = { id -> onAction(ManagerOverviewAction.OnStopClick(id)) },
-                            onStartClick = { id -> onAction(ManagerOverviewAction.OnStartClick(id)) },
+                            onDeleteClick = { address -> onAction(ManagerOverviewAction.DeleteManager(address)) },
+                            onStopClick = { address -> onAction(ManagerOverviewAction.OnStopClick(address)) },
+                            onStartClick = { address -> onAction(ManagerOverviewAction.OnStartClick(address)) },
                         )
                     }
                 }

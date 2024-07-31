@@ -1,28 +1,21 @@
 package com.cadrikmdev.manager.presentation.manager_overview
 
-import android.Manifest
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cadrikmdev.core.connectivity.domain.DeviceNode
 import com.cadrikmdev.core.connectivity.domain.DeviceType
 import com.cadrikmdev.core.connectivity.domain.TrackerManagerDiscovery
-import com.cadrikmdev.manager.presentation.manager_overview.model.TrackingDeviceUi
+import com.cadrikmdev.manager.presentation.manager_overview.mappers.toTrackingDeviceUI
 import com.cadrikmdev.permissions.domain.PermissionHandler
 import com.cadrikmdev.permissions.presentation.appPermissions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
-private fun DeviceNode.toTrackingDeviceUI(): TrackingDeviceUi {
-    return TrackingDeviceUi(
-        status = this.type.toString(),
-        id = this.displayName,
-        updateTimestamp = System.currentTimeMillis()
-    )
-}
 
 class ManagerOverviewViewModel(
     private val applicationScope: CoroutineScope,
@@ -68,7 +61,10 @@ class ManagerOverviewViewModel(
             }
 
             is ManagerOverviewAction.OnStartClick -> {
-                TODO()
+                viewModelScope.launch {
+                    val result = trackerManagerDiscovery.connectToDevice(action.address)
+                    Timber.d("Connect result: $result")
+                }
             }
 
             is ManagerOverviewAction.OnStopClick -> {
