@@ -6,7 +6,15 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
+import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
+import android.bluetooth.BluetoothGattServer
+import android.bluetooth.BluetoothGattServerCallback
+import android.bluetooth.BluetoothGattService
+import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
+import android.bluetooth.BluetoothServerSocket
+import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -33,6 +41,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.io.IOException
 
 class BluetoothNodeDiscovery(
     private val context: Context,
@@ -42,6 +51,13 @@ class BluetoothNodeDiscovery(
     private var _pairedDevices = MutableStateFlow<Set<BluetoothDevice>>(setOf())
     val pairedDevices = _pairedDevices.asStateFlow()
 
+    private var gattServer: BluetoothGattServer? = null
+    private var bluetoothAdapter: BluetoothAdapter? = null
+    private var bluetoothServerSocket: BluetoothSocket? = null
+    private var bluetoothClientSocket: BluetoothSocket? = null
+    private val bluetoothManager =
+        context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+
     @SuppressLint("MissingPermission")
     override fun observeConnectedDevices(localDeviceType: DeviceType): Flow<Set<DeviceNode>> {
         return callbackFlow {
@@ -50,7 +66,7 @@ class BluetoothNodeDiscovery(
                 DeviceType.TRACKER -> "signal_tracker_tracker_app"
             }
 
-            val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
             if (bluetoothAdapter == null) {
                 // Device doesn't support Bluetooth
                 Timber.e("Device doesn't support Bluetooth")
@@ -58,7 +74,7 @@ class BluetoothNodeDiscovery(
                 return@callbackFlow
             }
 
-            if (!bluetoothAdapter.isEnabled) {
+            if (bluetoothAdapter?.isEnabled != true) {
                 // Bluetooth is not enabled
                 Timber.d("Bluetooth is not enabled")
                 // You can request user to enable Bluetooth here
@@ -66,7 +82,9 @@ class BluetoothNodeDiscovery(
                 return@callbackFlow
             }
 
-            if (getPairedDevicesEndedWithError(bluetoothAdapter)) return@callbackFlow
+            bluetoothAdapter?.let {
+                if (getPairedDevicesEndedWithError(it)) return@callbackFlow
+            }
 
 
 //            val serviceListener = object : BluetoothProfile.ServiceListener {
@@ -113,10 +131,13 @@ class BluetoothNodeDiscovery(
             val bondStateReceiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
                     val action = intent.action
-                    val pairedDevices = getPairedDevices(bluetoothAdapter)
+
+                    val pairedDevices = bluetoothAdapter?.let {
+                        getPairedDevices(it)
+                    }
                     Timber.d("Updating paired devices: $pairedDevices")
 
-                    val pairedNodes = pairedDevices.mapNotNull {
+                    val pairedNodes = pairedDevices?.mapNotNull {
                         it.toDeviceNode()
                     }?.toSet() ?: setOf()
                     trySend(pairedNodes)
@@ -160,7 +181,7 @@ class BluetoothNodeDiscovery(
 //                }
 //            }
             Timber.d("Obtaining paired devices ${pairedDevices}")
-            val pairedNodes = pairedDevices.mapNotNull {it.toDeviceNode()}.toSet()
+            val pairedNodes = pairedDevices.mapNotNull { it.toDeviceNode() }.toSet()
             trySend(pairedNodes)
         } catch (e: ApiException) {
             awaitClose()
@@ -197,6 +218,35 @@ class BluetoothNodeDiscovery(
 
         // Use CompletableDeferred to wait for the result
         val resultDeferred = CompletableDeferred<Result<Boolean, BluetoothError>>()
+
+        Timber.d("Connecting to device with address: ${deviceAddress}")
+        Timber.d("Service uuid: ${ManagerControlServiceProtocol.customServiceUUID}")
+        Timber.d("Connecting to device with supportedServices; ${bluetoothDevice.uuids.forEach { "${it.uuid}, " }}")
+        bluetoothDevice.createRfcommSocketToServiceRecord(ManagerControlServiceProtocol.customServiceUUID)
+        bluetoothDevice?.let {
+            val clientSocket: BluetoothSocket =
+                it.createRfcommSocketToServiceRecord(
+                    ManagerControlServiceProtocol.customServiceUUID
+                )
+            // Accept connections from clients (running in a separate thread)
+            Thread {
+                clientSocket?.let { socket ->
+                    // Connect to the remote device through the socket. This call blocks
+                    // until it succeeds or throws an exception.
+                    try {
+                        socket.connect()
+                        Timber.d("Connected to server socket successfully on ${bluetoothDevice.address}")
+                    } catch (e: IOException) {
+                        Timber.e("Unable to connect to server socket ${e.printStackTrace()}")
+                    }
+
+                    // The connection attempt succeeded. Perform work associated with
+                    // the connection in a separate thread.
+                    manageConnectedClientSocket(socket)
+                }
+
+            }.start()
+        }
 
         // Connect to the device and discover services
         val callback = object : BluetoothGattCallback() {
@@ -243,15 +293,157 @@ class BluetoothNodeDiscovery(
                 }
             }
             // Handle other callback methods as needed
+
+        }
+
+        gattServer = bluetoothManager.openGattServer(context, gattServerCallback)
+        // Create the GATT service
+        val gattService =
+            BluetoothGattService(
+                ManagerControlServiceProtocol.customServiceUUID,
+                BluetoothGattService.SERVICE_TYPE_PRIMARY
+            )
+
+        // Create the GATT characteristic
+        val characteristic = BluetoothGattCharacteristic(
+            ManagerControlServiceProtocol.customCharacteristicServiceUUID,
+            BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_WRITE,
+            BluetoothGattCharacteristic.PERMISSION_READ or BluetoothGattCharacteristic.PERMISSION_WRITE
+        )
+
+        // Optionally add a descriptor
+        val descriptor = BluetoothGattDescriptor(
+            ManagerControlServiceProtocol.customCharacteristicServiceUUID, // Client Characteristic Configuration UUID
+            BluetoothGattDescriptor.PERMISSION_READ or BluetoothGattDescriptor.PERMISSION_WRITE
+        )
+        characteristic.addDescriptor(descriptor)
+
+        // Add the characteristic to the service
+        gattService.addCharacteristic(characteristic)
+
+        // TODO: Add your service to a Bluetooth GATT server here (Not available in Android SDK directly, usually part of peripheral devices)
+
+
+        gattServer?.addService(gattService)
+//        bluetoothAdapter?.let {
+//            startAdvertising(it)
+//        }
+
+        // You can set up Bluetooth classic (RFCOMM) or use BLE advertising for discovery
+        // For RFCOMM, you would use something like the following:
+        bluetoothAdapter?.let {
+            val serverSocket: BluetoothServerSocket? =
+                it.listenUsingRfcommWithServiceRecord(
+                    "MyService",
+                    ManagerControlServiceProtocol.customServiceUUID
+                )
+            // Accept connections from clients (running in a separate thread)
+            Thread {
+                var shouldLoop = true
+                while (shouldLoop) {
+                    try {
+                        val socket: BluetoothSocket? = serverSocket?.accept()
+                        socket?.let {
+                            // Handle the connection in a separate thread
+                            manageConnectedServerSocket(it)
+                        }
+                    } catch (e: IOException) {
+                        Timber.e("Socket's accept() method failed", e)
+                        shouldLoop = false
+                    }
+                }
+            }.start()
         }
 
         val gatt = bluetoothDevice.connectGatt(context, true, callback)
             ?: return Result.Error(BluetoothError.GATT_CONNECTION_FAILED)
         // Handle the case if the connection fails to establish initially
 
-        return  resultDeferred.await()
+        return resultDeferred.await()
         // Wait for the connection and services discovery to complete
         // You may need to implement additional logic to handle timeouts or state changes
+
+    }
+
+
+    private val gattServerCallback = object : BluetoothGattServerCallback() {
+        override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
+            super.onConnectionStateChange(device, status, newState)
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+                // Device connected
+                Timber.d("GATT connected successfully")
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                // Device disconnected
+                Timber.d("GATT disconnected")
+            }
+        }
+
+        override fun onCharacteristicReadRequest(
+            device: BluetoothDevice, requestId: Int,
+            offset: Int, characteristic: BluetoothGattCharacteristic
+        ) {
+            super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
+            if (characteristic.uuid == ManagerControlServiceProtocol.customCharacteristicServiceUUID) {
+                val value = byteArrayOf(0x01, 0x02) // Example value
+                gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, value)
+            }
+        }
+
+        override fun onCharacteristicWriteRequest(
+            device: BluetoothDevice, requestId: Int,
+            characteristic: BluetoothGattCharacteristic, preparedWrite: Boolean,
+            responseNeeded: Boolean, offset: Int, value: ByteArray
+        ) {
+            super.onCharacteristicWriteRequest(
+                device,
+                requestId,
+                characteristic,
+                preparedWrite,
+                responseNeeded,
+                offset,
+                value
+            )
+            if (characteristic.uuid == ManagerControlServiceProtocol.customCharacteristicServiceUUID) {
+                // Handle the write request
+                if (responseNeeded) {
+                    gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
+                }
+            }
+        }
+
+        override fun onDescriptorWriteRequest(
+            device: BluetoothDevice, requestId: Int,
+            descriptor: BluetoothGattDescriptor, preparedWrite: Boolean,
+            responseNeeded: Boolean, offset: Int, value: ByteArray
+        ) {
+            super.onDescriptorWriteRequest(
+                device,
+                requestId,
+                descriptor,
+                preparedWrite,
+                responseNeeded,
+                offset,
+                value
+            )
+            if (descriptor.uuid == ManagerControlServiceProtocol.customCharacteristicServiceUUID) {
+                // Handle descriptor write request
+                if (responseNeeded) {
+                    gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
+                }
+            }
+        }
+    }
+
+    private fun manageConnectedServerSocket(socket: BluetoothSocket) {
+        // Implement logic for communication with the connected client
+        bluetoothServerSocket = socket
+        // Read/write data using socket.inputStream and socket.outputStream
+    }
+
+    private fun manageConnectedClientSocket(socket: BluetoothSocket) {
+        // Implement logic for communication with the connected server
+        bluetoothClientSocket = socket
+        // Read/write data using socket.inputStream and socket.outputStream
     }
 
     private fun isFineLocationPermissionGranted(): Boolean {
@@ -263,14 +455,15 @@ class BluetoothNodeDiscovery(
     }
 
 
-    private fun isBluetoothConnectPermissionGranted() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        ActivityCompat.checkSelfPermission(
-            context,
-            Manifest.permission.BLUETOOTH_CONNECT
-        ) == PackageManager.PERMISSION_GRANTED
-    } else {
-        true
-    }
+    private fun isBluetoothConnectPermissionGranted() =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
 
     private fun getBluetoothDeviceFromDeviceAddress(deviceAddress: String): BluetoothDevice? {
         return try {
@@ -280,4 +473,21 @@ class BluetoothNodeDiscovery(
             null
         }
     }
+
+    fun closeClientSocket() {
+        try {
+            bluetoothClientSocket?.close()
+        } catch (e: IOException) {
+            Timber.e("Could not close the client socket", e)
+        }
+    }
+
+    fun closeServerSocket() {
+        try {
+            bluetoothServerSocket?.close()
+        } catch (e: IOException) {
+            Timber.e("Could not close the server socket", e)
+        }
+    }
+
 }
