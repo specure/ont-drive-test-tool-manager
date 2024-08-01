@@ -1,19 +1,8 @@
 package com.cadrikmdev.core.connectivity.data
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattDescriptor
-import android.bluetooth.BluetoothGattServer
-import android.bluetooth.BluetoothGattServerCallback
-import android.bluetooth.BluetoothGattService
-import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothProfile
-import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -33,13 +22,17 @@ import com.cadrikmdev.manager.domain.ManagerControlServiceProtocol
 import com.google.android.gms.common.api.ApiException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import java.io.IOException
 
@@ -51,20 +44,13 @@ class BluetoothNodeDiscovery(
     private var _pairedDevices = MutableStateFlow<Set<BluetoothDevice>>(setOf())
     val pairedDevices = _pairedDevices.asStateFlow()
 
-    private var gattServer: BluetoothGattServer? = null
-    private var bluetoothAdapter: BluetoothAdapter? = null
-    private var bluetoothServerSocket: BluetoothSocket? = null
-    private var bluetoothClientSocket: BluetoothSocket? = null
-    private val bluetoothManager =
-        context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+    private var _connections = MutableStateFlow<Map<String, BluetoothSocket>>(mapOf())
+    val connections = _connections.asStateFlow()
 
-    @SuppressLint("MissingPermission")
+    private var bluetoothAdapter: BluetoothAdapter? = null
+
     override fun observeConnectedDevices(localDeviceType: DeviceType): Flow<Set<DeviceNode>> {
         return callbackFlow {
-            val remoteCapability = when (localDeviceType) {
-                DeviceType.MANAGER -> "signal_tracker_manager_app"
-                DeviceType.TRACKER -> "signal_tracker_tracker_app"
-            }
 
             bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
             if (bluetoothAdapter == null) {
@@ -86,47 +72,6 @@ class BluetoothNodeDiscovery(
                 if (getPairedDevicesEndedWithError(it)) return@callbackFlow
             }
 
-
-//            val serviceListener = object : BluetoothProfile.ServiceListener {
-//                override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
-//
-//                    val connectedDevices = proxy.connectedDevices
-//                    connectedDevices.forEach { device ->
-//                        val deviceNode = if (ActivityCompat.checkSelfPermission(
-//                                context,
-//                                Manifest.permission.BLUETOOTH_CONNECT
-//                            ) != PackageManager.PERMISSION_GRANTED
-//                        ) {
-//                            // TODO: Consider calling
-//                            //    ActivityCompat#requestPermissions
-//                            // here to request the missing permissions, and then overriding
-//                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//                            //                                          int[] grantResults)
-//                            // to handle the case where the user grants the permission. See the documentation
-//                            // for ActivityCompat#requestPermissions for more details.
-//                            return
-//                        } else {
-//                            DeviceNode(
-//                                address = device.address,
-//                                displayName = device.name,
-//                                isNearby = device.bondState == BluetoothDevice.BOND_BONDED,
-//                                type = device.type,
-//                            )
-//                        }
-//
-//                    }
-//                }
-//
-//                override fun onServiceDisconnected(profile: Int) {
-//                    // Handle profile disconnection
-//                }
-//            }
-
-//            bluetoothAdapter?.getProfileProxy(context, serviceListener, BluetoothProfile.STATE_CONNECTED)
-//            val listener: (CapabilityInfo) -> Unit = {
-//                trySend(it.nodes.map { it.toDeviceNode() }.toSet())
-//            }
-
             // BroadcastReceiver for changes in bonded state
             val bondStateReceiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
@@ -145,16 +90,6 @@ class BluetoothNodeDiscovery(
                     if (action == BluetoothDevice.ACTION_BOND_STATE_CHANGED) {
                         val device =
                             intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-//                        val bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1)
-//                        when (bondState) {
-//                            BluetoothDevice.BOND_BONDED -> {
-//                                Timber.d( "Paired with device: ${device?.name}")
-//                            }
-//                            BluetoothDevice.BOND_NONE -> {
-//                                Timber.d("Unpaired with device: ${device?.name}")
-//                            }
-//                        }
-
                     }
                 }
             }
@@ -174,12 +109,6 @@ class BluetoothNodeDiscovery(
     ): Boolean {
         try {
             val pairedDevices: Set<BluetoothDevice> = getPairedDevices(bluetoothAdapter)
-//            val pairedDevicesWithSupportedService = pairedDevices.forEach { deviceNode ->
-//                val device = bluetoothAdapter.getRemoteDevice(deviceNode.address)
-//                connectToDevice(device) { connectedDeviceNode ->
-//                    trySend(pairedDevices.filter { it.address == connectedDeviceNode.address }.toSet())
-//                }
-//            }
             Timber.d("Obtaining paired devices ${pairedDevices}")
             val pairedNodes = pairedDevices.mapNotNull { it.toDeviceNode() }.toSet()
             trySend(pairedNodes)
@@ -223,9 +152,9 @@ class BluetoothNodeDiscovery(
         Timber.d("Service uuid: ${ManagerControlServiceProtocol.customServiceUUID}")
         Timber.d("Connecting to device with supportedServices; ${bluetoothDevice.uuids.forEach { "${it.uuid}, " }}")
         bluetoothDevice.createRfcommSocketToServiceRecord(ManagerControlServiceProtocol.customServiceUUID)
-        bluetoothDevice?.let {
+        bluetoothDevice?.let { device ->
             val clientSocket: BluetoothSocket =
-                it.createRfcommSocketToServiceRecord(
+                device.createRfcommSocketToServiceRecord(
                     ManagerControlServiceProtocol.customServiceUUID
                 )
             // Accept connections from clients (running in a separate thread)
@@ -242,7 +171,7 @@ class BluetoothNodeDiscovery(
 
                     // The connection attempt succeeded. Perform work associated with
                     // the connection in a separate thread.
-                    manageConnectedClientSocket(socket)
+                    manageConnectedSocket(socket)
                 }
 
             }.start()
@@ -250,85 +179,82 @@ class BluetoothNodeDiscovery(
         return Result.Success(true)
     }
 
-
-    private val gattServerCallback = object : BluetoothGattServerCallback() {
-        override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
-            super.onConnectionStateChange(device, status, newState)
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                // Device connected
-                Timber.d("GATT connected successfully")
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                // Device disconnected
-                Timber.d("GATT disconnected")
+    override fun disconnectFromDevice(deviceAddress: String): Boolean {
+        try {
+            if (_connections.value[deviceAddress] == null) {
+                return true
             }
+            _connections.value[deviceAddress]?.close()
+            _connections.value = removeKeyFromMap(deviceAddress)
+            return true
+        } catch (e: IOException) {
+            Timber.e(e, "Error occurred while closing the socket")
+            return false
         }
 
-        override fun onCharacteristicReadRequest(
-            device: BluetoothDevice, requestId: Int,
-            offset: Int, characteristic: BluetoothGattCharacteristic
-        ) {
-            super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
-            if (characteristic.uuid == ManagerControlServiceProtocol.customCharacteristicServiceUUID) {
-                val value = byteArrayOf(0x01, 0x02) // Example value
-                gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, value)
-            }
-        }
-
-        override fun onCharacteristicWriteRequest(
-            device: BluetoothDevice, requestId: Int,
-            characteristic: BluetoothGattCharacteristic, preparedWrite: Boolean,
-            responseNeeded: Boolean, offset: Int, value: ByteArray
-        ) {
-            super.onCharacteristicWriteRequest(
-                device,
-                requestId,
-                characteristic,
-                preparedWrite,
-                responseNeeded,
-                offset,
-                value
-            )
-            if (characteristic.uuid == ManagerControlServiceProtocol.customCharacteristicServiceUUID) {
-                // Handle the write request
-                if (responseNeeded) {
-                    gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
-                }
-            }
-        }
-
-        override fun onDescriptorWriteRequest(
-            device: BluetoothDevice, requestId: Int,
-            descriptor: BluetoothGattDescriptor, preparedWrite: Boolean,
-            responseNeeded: Boolean, offset: Int, value: ByteArray
-        ) {
-            super.onDescriptorWriteRequest(
-                device,
-                requestId,
-                descriptor,
-                preparedWrite,
-                responseNeeded,
-                offset,
-                value
-            )
-            if (descriptor.uuid == ManagerControlServiceProtocol.customCharacteristicServiceUUID) {
-                // Handle descriptor write request
-                if (responseNeeded) {
-                    gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
-                }
-            }
-        }
     }
 
-    private fun manageConnectedServerSocket(socket: BluetoothSocket) {
-        // Implement logic for communication with the connected client
-        bluetoothServerSocket = socket
-        // Read/write data using socket.inputStream and socket.outputStream
-    }
+    private fun removeKeyFromMap(deviceAddress: String) =
+        _connections.value.filter { it.key != deviceAddress }
 
-    private fun manageConnectedClientSocket(socket: BluetoothSocket) {
+    private fun manageConnectedSocket(socket: BluetoothSocket) {
         // Implement logic for communication with the connected server
-        bluetoothClientSocket = socket
-        // Read/write data using socket.inputStream and socket.outputStream
+        _connections.value = _connections.value.plus(Pair(socket.remoteDevice.address, socket))
+        // Launch a coroutine for receiving data
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val inputStream = socket.inputStream
+            val outputStream = socket.outputStream
+            val reader = inputStream.bufferedReader()
+
+            try {
+                // Using supervisorScope to ensure child coroutines are handled properly
+                supervisorScope {
+                    // Coroutine for receiving data
+                    val receiveJob = launch {
+                        try {
+                            while (isActive) { // Check if the coroutine is still active
+                                val message = reader.readLine() ?: break
+                                Timber.d("Received: $message")
+                                // Handle the received message
+                            }
+                        } catch (e: IOException) {
+                            Timber.e(e, "Error occurred during receiving data")
+                        }
+                    }
+
+                    // Coroutine for sending data
+                    val sendJob = launch {
+                        try {
+                            while (isActive) { // Check if the coroutine is still active
+                                val message = "Client message"
+                                outputStream.write((message + "\n").toByteArray())
+                                outputStream.flush()
+                                delay(5000) // Wait for 5 seconds before sending the next message
+                            }
+                        } catch (e: IOException) {
+                            Timber.e(e, "Error occurred during sending data")
+                        }
+                    }
+
+                    // Wait for both jobs to complete, or for cancellation
+                    receiveJob.join()
+                    sendJob.join()
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error occurred during communication")
+            } finally {
+                // Ensure the streams and socket are closed
+                try {
+                    reader.close()
+                    outputStream.close()
+                    socket.close()
+                    Timber.d("Socket closed: ${socket.remoteDevice.address}")
+                } catch (e: IOException) {
+                    Timber.e(e, "Error occurred while closing the socket")
+                }
+            }
+        }
     }
 
     private fun isFineLocationPermissionGranted(): Boolean {
@@ -358,21 +284,4 @@ class BluetoothNodeDiscovery(
             null
         }
     }
-
-    fun closeClientSocket() {
-        try {
-            bluetoothClientSocket?.close()
-        } catch (e: IOException) {
-            Timber.e("Could not close the client socket", e)
-        }
-    }
-
-    fun closeServerSocket() {
-        try {
-            bluetoothServerSocket?.close()
-        } catch (e: IOException) {
-            Timber.e("Could not close the server socket", e)
-        }
-    }
-
 }
