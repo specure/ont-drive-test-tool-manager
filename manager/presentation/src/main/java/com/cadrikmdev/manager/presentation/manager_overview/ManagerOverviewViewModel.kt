@@ -5,8 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cadrikmdev.core.connectivity.domain.DeviceType
-import com.cadrikmdev.core.connectivity.domain.TrackerManagerDiscovery
+import com.cadrikmdev.intercom.domain.client.BluetoothClientService
 import com.cadrikmdev.manager.presentation.manager_overview.mappers.toTrackingDeviceUI
 import com.cadrikmdev.permissions.domain.PermissionHandler
 import com.cadrikmdev.permissions.presentation.appPermissions
@@ -19,7 +18,7 @@ import timber.log.Timber
 
 class ManagerOverviewViewModel(
     private val applicationScope: CoroutineScope,
-    private val trackerManagerDiscovery: TrackerManagerDiscovery,
+    private val bluetoothService: BluetoothClientService,
     private val permissionHandler: PermissionHandler,
 ) : ViewModel() {
 
@@ -32,7 +31,7 @@ class ManagerOverviewViewModel(
             appPermissions
         )
 
-        trackerManagerDiscovery.observeConnectedDevices(DeviceType.TRACKER)
+        bluetoothService.observeConnectedDevices(com.cadrikmdev.intercom.domain.client.DeviceType.TRACKER)
             .onEach { devices ->
                 state = state.copy(
                     managedDevices = devices.map { it.toTrackingDeviceUI() }
@@ -62,7 +61,7 @@ class ManagerOverviewViewModel(
 
             is ManagerOverviewAction.OnStartClick -> {
                 viewModelScope.launch {
-                    val result = trackerManagerDiscovery.connectToDevice(action.address)
+                    val result = bluetoothService.connectToDevice(action.address)
                     Timber.d("Connect result: $result")
                 }
             }

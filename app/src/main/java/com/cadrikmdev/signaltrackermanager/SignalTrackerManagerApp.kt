@@ -2,7 +2,7 @@ package com.cadrikmdev.signaltrackermanager
 
 import android.app.Application
 import android.content.Context
-import com.cadrikmdev.core.connectivity.data.di.coreConnectivityDataModule
+import com.cadrikmdev.intercom.data.di.intercomDataModule
 import com.cadrikmdev.manager.presentation.di.managerPresentationModule
 import com.cadrikmdev.permissions.presentation.di.permissionsModule
 import com.cadrikmdev.signaltrackermanager.di.appModule
@@ -30,7 +30,7 @@ class SignalTrackerManagerApp : Application() {
             androidContext(this@SignalTrackerManagerApp)
             modules(
                 appModule,
-                coreConnectivityDataModule,
+                intercomDataModule,
                 managerPresentationModule,
                 permissionsModule,
             )

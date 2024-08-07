@@ -1,9 +1,9 @@
 package com.cadrikmdev.manager.presentation.manager_overview.mappers
 
-import com.cadrikmdev.core.connectivity.domain.DeviceNode
+import com.cadrikmdev.intercom.domain.client.DeviceNode
 import com.cadrikmdev.manager.presentation.manager_overview.model.TrackingDeviceUi
 
-fun DeviceNode.toTrackingDeviceUI(): TrackingDeviceUi {
+fun com.cadrikmdev.intercom.domain.client.DeviceNode.toTrackingDeviceUI(): TrackingDeviceUi {
     return TrackingDeviceUi(
         address = this.address,
         status = this.type.toString(),

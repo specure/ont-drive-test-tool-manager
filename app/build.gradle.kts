@@ -59,7 +59,6 @@ dependencies {
     // Timber
     implementation(libs.timber)
 
-    implementation(projects.core.connectivity.data)
     implementation(projects.core.domain)
     implementation(projects.core.data)
     implementation(projects.core.presentation.designsystem)
@@ -68,4 +67,7 @@ dependencies {
     implementation(projects.manager.data)
     implementation(projects.manager.domain)
     implementation(projects.permissions.presentation)
+    implementation(projects.intercom.presentation)
+    implementation(projects.intercom.domain)
+    implementation(projects.intercom.data)
 }

@@ -1,9 +1,10 @@
 plugins {
     alias(libs.plugins.signaltrackermanager.android.feature.ui)
+    alias(libs.plugins.mapsplatform.secrets.plugin)
 }
 
 android {
-    namespace = "com.cadrikmdev.manager.presentation"
+    namespace = "com.cadrikmdev.intercom.presentation"
 }
 
 dependencies {
@@ -13,16 +14,8 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.timber)
 
-    implementation(projects.intercom.domain)
-
     implementation(projects.core.domain)
-    implementation(projects.core.presentation.ui)
-
-    implementation(projects.manager.domain)
+    implementation(projects.intercom.domain)
     implementation(projects.permissions.domain)
     implementation(projects.permissions.presentation)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }
