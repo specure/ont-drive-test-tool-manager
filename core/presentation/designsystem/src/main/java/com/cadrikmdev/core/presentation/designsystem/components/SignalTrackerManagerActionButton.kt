@@ -40,7 +40,7 @@ fun SignalTrackerManagerActionButton(
             disabledContainerColor = SignalTrackerManagerGray,
             disabledContentColor = SignalTrackerManagerBlack
         ),
-        shape = RoundedCornerShape(100f),
+        shape = RoundedCornerShape(20),
         modifier = modifier
             .height(IntrinsicSize.Min)
     ) {

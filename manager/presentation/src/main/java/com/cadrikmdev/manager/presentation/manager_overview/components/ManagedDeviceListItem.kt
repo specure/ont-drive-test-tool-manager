@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,6 +41,7 @@ fun ManagedDeviceListItem(
     onDeleteClick: (address: String) -> Unit,
     onStartClick: (address: String) -> Unit,
     onStopClick: (address: String) -> Unit,
+    onConnectClick: (address: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showDropDown by remember {
@@ -74,20 +76,25 @@ fun ManagedDeviceListItem(
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(id = R.string.updated_at),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = trackingDeviceUi.updateTimestamp.toDuration(DurationUnit.MILLISECONDS)
+                    .toLocalTime().toString() ?: "-",
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = stringResource(id = R.string.updated_at),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = trackingDeviceUi.updateTimestamp.toDuration(DurationUnit.MILLISECONDS)
-                        .toLocalTime().toString() ?: "-",
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+
+            SignalTrackerManagerActionButton(text = stringResource(id = R.string.connect), modifier = Modifier.weight(1.5f), isLoading = false) {
+                onConnectClick(trackingDeviceUi.address)
             }
             SignalTrackerManagerActionButton(text = stringResource(id = R.string.start), modifier = Modifier.weight(1f), isLoading = false) {
                 onStartClick(trackingDeviceUi.address)
@@ -129,6 +136,7 @@ private fun RunListItemPreview() {
             onDeleteClick = { },
             onStartClick = { },
             onStopClick = { },
+            onConnectClick = { },
         )
     }
 }

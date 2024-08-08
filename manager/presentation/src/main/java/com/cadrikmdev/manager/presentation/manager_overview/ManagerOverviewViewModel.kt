@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cadrikmdev.intercom.domain.client.BluetoothClientService
+import com.cadrikmdev.intercom.domain.message.TrackerAction
 import com.cadrikmdev.manager.presentation.manager_overview.mappers.toTrackingDeviceUI
 import com.cadrikmdev.permissions.domain.PermissionHandler
 import com.cadrikmdev.permissions.presentation.appPermissions
@@ -59,15 +60,23 @@ class ManagerOverviewViewModel(
                 TODO()
             }
 
-            is ManagerOverviewAction.OnStartClick -> {
+            is ManagerOverviewAction.OnConnectClick -> {
                 viewModelScope.launch {
                     val result = bluetoothService.connectToDevice(action.address)
                     Timber.d("Connect result: $result")
                 }
             }
 
+            is ManagerOverviewAction.OnStartClick -> {
+                viewModelScope.launch {
+                    bluetoothService.sendActionFlow.emit(TrackerAction.StartTest(action.address))
+                }
+            }
+
             is ManagerOverviewAction.OnStopClick -> {
-                TODO()
+                viewModelScope.launch {
+                    bluetoothService.sendActionFlow.emit(TrackerAction.StopTest(action.address))
+                }
             }
 
             ManagerOverviewAction.OnResolvePermissionClick -> {

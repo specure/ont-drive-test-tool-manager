@@ -3,6 +3,7 @@ package com.cadrikmdev.intercom.data
 import com.cadrikmdev.intercom.domain.message.MessageProcessor
 import com.cadrikmdev.intercom.data.message.TrackerActionDto
 import com.cadrikmdev.intercom.data.message.toTrackerAction
+import com.cadrikmdev.intercom.data.message.toTrackerActionDto
 import com.cadrikmdev.intercom.domain.data.MeasurementProgress
 import com.cadrikmdev.intercom.domain.message.TrackerAction
 import kotlinx.serialization.SerializationException
@@ -38,4 +39,16 @@ class AndroidMessageProcessor(
         }
         return null
     }
+
+    override fun sendAction(action: TrackerAction?): String? {
+        try {
+            action?.let {
+                return Json.encodeToString(it.toTrackerActionDto()) + "\n"
+            }
+        } catch (e: SerializationException) {
+            e.printStackTrace()
+        } catch (e: IllegalArgumentException) {
+            e.printStackTrace()
+        }
+        return null    }
 }

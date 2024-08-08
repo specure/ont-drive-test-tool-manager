@@ -33,7 +33,6 @@ import com.cadrikmdev.core.presentation.designsystem.components.SignalTrackerMan
 import com.cadrikmdev.core.presentation.designsystem.components.SignalTrackerManagerToolbar
 import com.cadrikmdev.manager.presentation.R
 import com.cadrikmdev.manager.presentation.manager_overview.components.ManagedDeviceListItem
-import com.cadrikmdev.manager.presentation.manager_overview.model.TrackingDeviceUi
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -143,6 +142,7 @@ private fun ManagerOverviewScreen(
                             onDeleteClick = { address -> onAction(ManagerOverviewAction.DeleteManager(address)) },
                             onStopClick = { address -> onAction(ManagerOverviewAction.OnStopClick(address)) },
                             onStartClick = { address -> onAction(ManagerOverviewAction.OnStartClick(address)) },
+                            onConnectClick = { address -> onAction(ManagerOverviewAction.OnConnectClick(address)) },
                         )
                     }
                 }

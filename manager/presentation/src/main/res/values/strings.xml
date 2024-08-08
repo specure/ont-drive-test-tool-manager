@@ -8,4 +8,5 @@
     <string name="stop">Stop</string>
     <string name="permission_required">Permission required</string>
     <string name="resolve">Resolve\t</string>
+    <string name="connect">Connect</string>
 </resources>
