@@ -95,6 +95,7 @@ class AndroidBluetoothClientService(
                                                 outputStream.write((message).toByteArray())
                                                 outputStream.flush()
                                             }
+                                            sendActionFlow.value = null
                                         }
                                     } catch (e: IOException) {
                                         Timber.e(e, "Error occurred during sending data")
