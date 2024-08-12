@@ -35,7 +35,15 @@ class ManagerOverviewViewModel(
         bluetoothService.observeConnectedDevices(com.cadrikmdev.intercom.domain.client.DeviceType.TRACKER)
             .onEach { devices ->
                 state = state.copy(
-                    managedDevices = devices.map { it.toTrackingDeviceUI() }
+                    managedDevices = devices.values.toList()
+                )
+            }
+            .launchIn(viewModelScope)
+
+        bluetoothService.trackingDevices
+            .onEach { devices ->
+                state = state.copy(
+                    managedDevices = devices.values.toList()
                 )
             }
             .launchIn(viewModelScope)

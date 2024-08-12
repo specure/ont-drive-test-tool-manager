@@ -1,8 +1,8 @@
 package com.cadrikmdev.manager.presentation.manager_overview
 
-import com.cadrikmdev.manager.presentation.manager_overview.model.TrackingDeviceUi
+import com.cadrikmdev.intercom.domain.client.TrackingDevice
 
 data class ManagerOverviewState(
     val isPermissionRequired: Boolean = true,
-    val managedDevices: List<TrackingDeviceUi> = emptyList(),
+    val managedDevices: List<TrackingDevice> = emptyList(),
 )

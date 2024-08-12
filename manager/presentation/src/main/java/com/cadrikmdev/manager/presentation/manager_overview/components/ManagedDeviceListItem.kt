@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,13 +30,13 @@ import com.cadrikmdev.core.presentation.ui.toLocalTime
 import com.cadrikmdev.core.presentation.designsystem.SignalTrackerManagerTheme
 import com.cadrikmdev.core.presentation.designsystem.components.SignalTrackerManagerActionButton
 import com.cadrikmdev.manager.presentation.R
-import com.cadrikmdev.manager.presentation.manager_overview.model.TrackingDeviceUi
+import com.cadrikmdev.intercom.domain.client.TrackingDevice
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 @Composable
 fun ManagedDeviceListItem(
-    trackingDeviceUi: TrackingDeviceUi,
+    trackingDeviceUi: TrackingDevice,
     onDeleteClick: (address: String) -> Unit,
     onStartClick: (address: String) -> Unit,
     onStopClick: (address: String) -> Unit,
@@ -67,6 +66,14 @@ fun ManagedDeviceListItem(
         ) {
             Text(
                 text = trackingDeviceUi.name,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = if (trackingDeviceUi.connected) {
+                    stringResource(id = R.string.conected)
+                } else {
+                    stringResource(id = R.string.disconected)
+                },
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
@@ -127,10 +134,11 @@ fun ManagedDeviceListItem(
 private fun RunListItemPreview() {
     SignalTrackerManagerTheme {
         ManagedDeviceListItem(
-            trackingDeviceUi = TrackingDeviceUi(
+            trackingDeviceUi = TrackingDevice(
                 name = "Telephone model name",
                 address = "47:51:53:55:88:56:FE",
-                status = "running",
+                status = "idle",
+                connected = false,
                 updateTimestamp = 15616561513
             ),
             onDeleteClick = { },

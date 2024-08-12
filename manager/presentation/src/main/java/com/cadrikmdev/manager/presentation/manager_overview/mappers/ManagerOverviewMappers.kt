@@ -1,13 +1,14 @@
 package com.cadrikmdev.manager.presentation.manager_overview.mappers
 
 import com.cadrikmdev.intercom.domain.client.DeviceNode
-import com.cadrikmdev.manager.presentation.manager_overview.model.TrackingDeviceUi
+import com.cadrikmdev.intercom.domain.client.TrackingDevice
 
-fun com.cadrikmdev.intercom.domain.client.DeviceNode.toTrackingDeviceUI(): TrackingDeviceUi {
-    return TrackingDeviceUi(
+fun DeviceNode.toTrackingDeviceUI(): TrackingDevice {
+    return TrackingDevice(
         address = this.address,
-        status = this.type.toString(),
+        status = this.status.toString(),
         name = this.displayName,
-        updateTimestamp = System.currentTimeMillis()
+        connected = this.connected,
+        updateTimestamp = lastUpdatedTimestamp
     )
 }
