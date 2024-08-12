@@ -270,6 +270,7 @@ class AndroidBluetoothClientService(
 
     override fun disconnectFromDevice(deviceAddress: String): Boolean {
         try {
+            markDeviceDisconnected(deviceAddress)
             if (_connections.value[deviceAddress] == null) {
                 return true
             }
@@ -321,11 +322,15 @@ class AndroidBluetoothClientService(
                                 val message = reader.readLine() ?: break
                                 Timber.d("Received: $message")
                                 // Handle the received message
+                                val action = messageProcessor.processMessage(message)
+                                if (action is TrackerAction.UpdateProgress) {
+                                    updateStatus(address, action)
+                                }
                             }
                         } catch (e: IOException) {
                             Timber.e(e, "Error occurred during receiving data")
                         } finally {
-                            markDeviceDisconnected(socket)
+                            markDeviceDisconnected(address)
                         }
 
                     }
@@ -345,7 +350,7 @@ class AndroidBluetoothClientService(
                         } catch (e: IOException) {
                             Timber.e(e, "Error occurred during sending data")
                         } finally {
-                            markDeviceDisconnected(socket)
+                            markDeviceDisconnected(address)
                         }
                     }
 
@@ -358,7 +363,7 @@ class AndroidBluetoothClientService(
             } finally {
                 // Ensure the streams and socket are closed
                 try {
-                    markDeviceDisconnected(socket)
+                    markDeviceDisconnected(address)
                     reader.close()
                     outputStream.close()
                     socket.close()
@@ -370,15 +375,30 @@ class AndroidBluetoothClientService(
         }
     }
 
-    private fun markDeviceDisconnected(socket: BluetoothSocket) {
-        val connectedDevice = trackingDevices.value[socket.remoteDevice.address]?.copy(
+    private fun updateStatus(address: String, updateProgress: TrackerAction.UpdateProgress) {
+        val updatedDevice = trackingDevices.value[address]?.copy(
+            status = updateProgress.progress.state.toString(),
+            updateTimestamp = updateProgress.progress.timestamp
+        )
+        updatedDevice?.let {
+            val tmpTrackingDevices = trackingDevices.value.toMutableMap()
+            tmpTrackingDevices[address] = it
+            // Coroutine for receiving data
+            CoroutineScope(Dispatchers.IO).launch {
+                trackingDevices.emit(tmpTrackingDevices)
+            }
+        }
+    }
+
+    private fun markDeviceDisconnected(address: String) {
+        val connectedDevice = trackingDevices.value[address]?.copy(
             connected = false,
             status = MeasurementState.UNKNOWN.toString(),
             updateTimestamp = System.currentTimeMillis()
         )
         connectedDevice?.let {
             val tmpTrackingDevices = trackingDevices.value.toMutableMap()
-            tmpTrackingDevices[socket.remoteDevice.address] = it
+            tmpTrackingDevices[address] = it
             // Coroutine for receiving data
             CoroutineScope(Dispatchers.IO).launch {
                 trackingDevices.emit(tmpTrackingDevices)

@@ -6,12 +6,12 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.content.Context
-import com.cadrikmdev.intercom.domain.server.BluetoothServerService
 import com.cadrikmdev.intercom.domain.ManagerControlServiceProtocol
 import com.cadrikmdev.intercom.domain.data.MeasurementProgress
 import com.cadrikmdev.intercom.domain.data.MeasurementState
 import com.cadrikmdev.intercom.domain.message.MessageProcessor
 import com.cadrikmdev.intercom.domain.message.TrackerAction
+import com.cadrikmdev.intercom.domain.server.BluetoothServerService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -129,12 +129,14 @@ class AndroidBluetoothServerService(
                         try {
                             while (isActive) {
                                 val message = getStatusUpdate()
-                                val encodedMessage = messageProcessor.sendMessage(message)
-                                Timber.d("Sending: $encodedMessage")
-                                val byteArray = encodedMessage?.toByteArray()
-                                byteArray?.let {
-                                    outputStream.write(it)
-                                    outputStream.flush()
+                                message?.let {
+                                    val encodedMessage = messageProcessor.sendAction(TrackerAction.UpdateProgress(progress = it))
+                                    Timber.d("Sending: $encodedMessage")
+                                    val byteArray = encodedMessage?.toByteArray()
+                                    byteArray?.let {
+                                        outputStream.write(it)
+                                        outputStream.flush()
+                                    }
                                 }
                                 delay(1000) // Wait for 1 seconds before sending the next message
                             }
