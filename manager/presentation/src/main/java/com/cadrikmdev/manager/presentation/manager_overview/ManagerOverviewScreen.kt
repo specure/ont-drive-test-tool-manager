@@ -5,6 +5,7 @@ package com.cadrikmdev.manager.presentation.manager_overview
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -92,7 +93,8 @@ private fun ManagerOverviewScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            verticalArrangement = Arrangement.Top
         ) {
             if (state.isPermissionRequired) {
                 Row(
@@ -126,9 +128,8 @@ private fun ManagerOverviewScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .nestedScroll(scrollBehavior.nestedScrollConnection)
-                        .padding(horizontal = 16.dp),
-                    contentPadding = padding,
+                        .nestedScroll(scrollBehavior.nestedScrollConnection),
+                    contentPadding = PaddingValues(8.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     items(

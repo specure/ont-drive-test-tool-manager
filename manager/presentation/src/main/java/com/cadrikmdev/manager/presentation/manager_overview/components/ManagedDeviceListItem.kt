@@ -31,6 +31,9 @@ import com.cadrikmdev.core.presentation.designsystem.SignalTrackerManagerTheme
 import com.cadrikmdev.core.presentation.designsystem.components.SignalTrackerManagerActionButton
 import com.cadrikmdev.manager.presentation.R
 import com.cadrikmdev.intercom.domain.client.TrackingDevice
+import com.cadrikmdev.intercom.domain.data.MeasurementProgress
+import com.cadrikmdev.intercom.domain.data.MeasurementState
+import com.cadrikmdev.intercom.domain.message.Message
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -76,10 +79,6 @@ fun ManagedDeviceListItem(
                 },
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Text(
-                text = trackingDeviceUi.status,
-                color = MaterialTheme.colorScheme.onSurface
-            )
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -97,16 +96,47 @@ fun ManagedDeviceListItem(
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(id = R.string.status),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = trackingDeviceUi.status,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
-            SignalTrackerManagerActionButton(text = stringResource(id = R.string.connect), modifier = Modifier.weight(1.5f), isLoading = false) {
+            SignalTrackerManagerActionButton(
+                text = if (trackingDeviceUi.connected) {
+                    stringResource(id = R.string.disconnect)
+                } else {
+                    stringResource(id = R.string.connect)
+                },
+                modifier = Modifier.weight(1.5f),
+                isLoading = false
+            ) {
                 onConnectClick(trackingDeviceUi.address)
             }
-            SignalTrackerManagerActionButton(text = stringResource(id = R.string.start), modifier = Modifier.weight(1f), isLoading = false) {
+            SignalTrackerManagerActionButton(
+                text = stringResource(id = R.string.start),
+                modifier = Modifier.weight(1f),
+                enabled = (trackingDeviceUi.connected && trackingDeviceUi.status != MeasurementState.RUNNING.toString() && trackingDeviceUi.status != MeasurementState.NOT_ACTIVATED.toString()),
+                isLoading = false
+            ) {
                 onStartClick(trackingDeviceUi.address)
             }
-            SignalTrackerManagerActionButton(text = stringResource(id = R.string.stop), modifier = Modifier.weight(1f), isLoading = false) {
+            SignalTrackerManagerActionButton(
+                text = stringResource(id = R.string.stop),
+                modifier = Modifier.weight(1f),
+                enabled = (trackingDeviceUi.connected && trackingDeviceUi.status == MeasurementState.RUNNING.toString() && trackingDeviceUi.status != MeasurementState.NOT_ACTIVATED.toString()),
+                isLoading = false
+            ) {
                 onStopClick(trackingDeviceUi.address)
             }
         }

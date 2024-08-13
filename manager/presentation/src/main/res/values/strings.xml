@@ -10,5 +10,7 @@
     <string name="resolve">Resolve\t</string>
     <string name="connect">Connect</string>
     <string name="conected">Connected</string>
-    <string name="disconected">N/A</string>
+    <string name="disconected">Not connected</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="status">Status:</string>
 </resources>
