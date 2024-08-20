@@ -69,7 +69,7 @@ private fun ManagerOverviewScreen(
     LaunchedEffect(lifecycleState) {
         when (lifecycleState) {
             Lifecycle.State.RESUMED -> {
-                onEvent(ManagerOverviewEvent.OnUpdatePermissionStatus)
+                onEvent(ManagerOverviewEvent.OnResumed)
             }
 
             Lifecycle.State.DESTROYED,
@@ -96,6 +96,24 @@ private fun ManagerOverviewScreen(
                 .padding(padding),
             verticalArrangement = Arrangement.Top
         ) {
+            if (!state.isBluetoothAdapterEnabled) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(text = stringResource(id = R.string.bluetoothAdapterDisabled))
+                    SignalTrackerManagerOutlinedActionButton(
+                        modifier = Modifier.padding(start = 16.dp),
+                        text = stringResource(id = R.string.enable),
+                        isLoading = false
+                    ) {
+                        onAction(ManagerOverviewAction.OnOpenBluetoothSettingsClick)
+                    }
+                }
+            }
             if (state.isPermissionRequired) {
                 Row(
                     modifier = Modifier

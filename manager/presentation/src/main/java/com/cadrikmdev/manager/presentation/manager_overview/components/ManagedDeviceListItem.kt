@@ -31,9 +31,7 @@ import com.cadrikmdev.core.presentation.designsystem.SignalTrackerManagerTheme
 import com.cadrikmdev.core.presentation.designsystem.components.SignalTrackerManagerActionButton
 import com.cadrikmdev.manager.presentation.R
 import com.cadrikmdev.intercom.domain.client.TrackingDevice
-import com.cadrikmdev.intercom.domain.data.MeasurementProgress
 import com.cadrikmdev.intercom.domain.data.MeasurementState
-import com.cadrikmdev.intercom.domain.message.Message
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -73,9 +71,9 @@ fun ManagedDeviceListItem(
             )
             Text(
                 text = if (trackingDeviceUi.connected) {
-                    stringResource(id = R.string.conected)
+                    stringResource(id = R.string.connected)
                 } else {
-                    stringResource(id = R.string.disconected)
+                    stringResource(id = R.string.disconnected)
                 },
                 color = MaterialTheme.colorScheme.onSurface
             )

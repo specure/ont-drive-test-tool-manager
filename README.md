@@ -16,12 +16,12 @@ This project meant to be as a remote controller via bluetooth for SignalTracker 
 6. put signal tracker in active track screen
 7. now you should be able to start and stop signal tracking on signal tracker app 
 
-
 ## TODO:
 
-1. Display only paired devices with running signal tracker app installed and running
-2. Visualize loading states (connecting, starting, stopping)
-3. Pull to refresh of bluetooth devices
+1. Check if bluetooth is enabled first and check for devices on if it is and show on screen problem when it is not enabled
+2. Display only paired devices with running signal tracker app installed and running
+3. Visualize loading states (connecting, starting, stopping)
+4. Pull to refresh of bluetooth devices
 
 ## Potential limitation:
 

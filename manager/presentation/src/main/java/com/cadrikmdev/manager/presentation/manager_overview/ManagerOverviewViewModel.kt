@@ -1,13 +1,15 @@
 package com.cadrikmdev.manager.presentation.manager_overview
 
+import android.Manifest
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cadrikmdev.core.domain.service.BluetoothService
 import com.cadrikmdev.intercom.domain.client.BluetoothClientService
+import com.cadrikmdev.intercom.domain.client.DeviceType
 import com.cadrikmdev.intercom.domain.message.TrackerAction
-import com.cadrikmdev.manager.presentation.manager_overview.mappers.toTrackingDeviceUI
 import com.cadrikmdev.permissions.domain.PermissionHandler
 import com.cadrikmdev.permissions.presentation.appPermissions
 import kotlinx.coroutines.CoroutineScope
@@ -20,6 +22,7 @@ import timber.log.Timber
 class ManagerOverviewViewModel(
     private val applicationScope: CoroutineScope,
     private val bluetoothService: BluetoothClientService,
+    private val androidBluetoothService: BluetoothService,
     private val permissionHandler: PermissionHandler,
 ) : ViewModel() {
 
@@ -32,21 +35,8 @@ class ManagerOverviewViewModel(
             appPermissions
         )
 
-        bluetoothService.observeConnectedDevices(com.cadrikmdev.intercom.domain.client.DeviceType.TRACKER)
-            .onEach { devices ->
-                state = state.copy(
-                    managedDevices = devices.values.toList()
-                )
-            }
-            .launchIn(viewModelScope)
+        manageBluetoothDevices()
 
-        bluetoothService.trackingDevices
-            .onEach { devices ->
-                state = state.copy(
-                    managedDevices = devices.values.toList()
-                )
-            }
-            .launchIn(viewModelScope)
 
 //        viewModelScope.launch {
 //            delay(2000)
@@ -60,6 +50,26 @@ class ManagerOverviewViewModel(
 //                )
 //            )
 //        }
+    }
+
+    private fun manageBluetoothDevices() {
+        if (permissionHandler.isPermissionGranted(Manifest.permission.BLUETOOTH_CONNECT) && state.isBluetoothAdapterEnabled) {
+            bluetoothService.observeConnectedDevices(DeviceType.TRACKER)
+                .onEach { devices ->
+                    state = state.copy(
+                        managedDevices = devices.values.toList()
+                    )
+                }
+                .launchIn(viewModelScope)
+
+            bluetoothService.trackingDevices
+                .onEach { devices ->
+                    state = state.copy(
+                        managedDevices = devices.values.toList()
+                    )
+                }
+                .launchIn(viewModelScope)
+        }
     }
 
     fun onAction(action: ManagerOverviewAction) {
@@ -90,14 +100,19 @@ class ManagerOverviewViewModel(
             ManagerOverviewAction.OnResolvePermissionClick -> {
 
             }
+            ManagerOverviewAction.OnOpenBluetoothSettingsClick -> {
+                androidBluetoothService.openBluetoothSettings()
+            }
             else -> Unit
         }
     }
 
     fun onEvent(event: ManagerOverviewEvent) {
         when (event) {
-            is ManagerOverviewEvent.OnUpdatePermissionStatus -> {
+            is ManagerOverviewEvent.OnResumed -> {
+                updateBluetoothAdapterState()
                 updatePermissionsState()
+                manageBluetoothDevices()
             }
         }
     }
@@ -105,6 +120,12 @@ class ManagerOverviewViewModel(
     private fun updatePermissionsState() {
         state = state.copy(
             isPermissionRequired = permissionHandler.getNotGrantedPermissionList().isNotEmpty(),
+        )
+    }
+
+    private fun updateBluetoothAdapterState() {
+        state = state.copy(
+            isBluetoothAdapterEnabled = androidBluetoothService.isBluetoothEnabled(),
         )
     }
 }
