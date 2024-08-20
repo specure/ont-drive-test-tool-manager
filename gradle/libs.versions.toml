@@ -62,7 +62,7 @@ projectVersionName = "1.0.1"
 projectMinSdkVersion = "26"
 projectTargetSdkVersion = "34"
 projectCompileSdkVersion = "34"
-projectVersionCode = "1"
+projectVersionCode = "2"
 featureDeliveryKtx = "2.1.0"
 
 [libraries]
