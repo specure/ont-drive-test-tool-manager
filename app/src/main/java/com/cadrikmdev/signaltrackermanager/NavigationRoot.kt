@@ -56,11 +56,7 @@ private fun NavGraphBuilder.permissionsGraph(
             val context = LocalContext.current
             PermissionsScreen(
                 onBackPressed = {
-                    navController.navigate("track_overview") {
-                        popUpTo("permissions") {
-                            inclusive = true
-                        }
-                    }
+                    navController.navigateUp()
                 },
                 openAppSettings = {
                     context.openAppSettings()
