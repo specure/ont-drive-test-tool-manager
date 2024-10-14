@@ -28,10 +28,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.currentStateAsState
+import com.cadrikmdev.core.presentation.designsystem.InfoIcon
+import com.cadrikmdev.core.presentation.designsystem.SettingsIcon
 import com.cadrikmdev.core.presentation.designsystem.SignalTrackerManagerTheme
 import com.cadrikmdev.core.presentation.designsystem.components.SignalTrackerManagerOutlinedActionButton
 import com.cadrikmdev.core.presentation.designsystem.components.SignalTrackerManagerScaffold
 import com.cadrikmdev.core.presentation.designsystem.components.SignalTrackerManagerToolbar
+import com.cadrikmdev.core.presentation.designsystem.components.util.DropDownItem
 import com.cadrikmdev.manager.presentation.R
 import com.cadrikmdev.manager.presentation.manager_overview.components.ManagedDeviceListItem
 import org.koin.androidx.compose.koinViewModel
@@ -39,6 +42,8 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ManagerOverviewScreenRoot(
     onResolvePermissionClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onAboutClick: () -> Unit,
     viewModel: ManagerOverviewViewModel = koinViewModel(),
 ) {
     ManagerOverviewScreen(
@@ -46,6 +51,8 @@ fun ManagerOverviewScreenRoot(
         onAction = { action ->
             when (action) {
                 ManagerOverviewAction.OnResolvePermissionClick -> onResolvePermissionClick()
+                ManagerOverviewAction.OnSettingsClick -> onSettingsClick()
+                ManagerOverviewAction.OnAboutClick -> onAboutClick()
                 else -> Unit
             }
             viewModel.onAction(action)
@@ -54,6 +61,7 @@ fun ManagerOverviewScreenRoot(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ManagerOverviewScreen(
     state: ManagerOverviewState,
@@ -86,6 +94,22 @@ private fun ManagerOverviewScreen(
                 showBackButton = false,
                 title = stringResource(id = R.string.signal_tracker_manager),
                 scrollBehavior = scrollBehavior,
+                menuItems = listOf(
+                    DropDownItem(
+                        icon = SettingsIcon,
+                        title = stringResource(id = R.string.settings)
+                    ),
+                    DropDownItem(
+                        icon = InfoIcon,
+                        title = stringResource(id = R.string.about)
+                    ),
+                ),
+                onMenuItemClick = { index ->
+                    when (index) {
+                        0 -> onAction(ManagerOverviewAction.OnSettingsClick)
+                        1 -> onAction(ManagerOverviewAction.OnAboutClick)
+                    }
+                },
             )
         },
     ) { padding ->

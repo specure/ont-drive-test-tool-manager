@@ -1,3 +1,9 @@
+1.1.0-alpha
+----------------
+Added About screen
+Added Settings screen
+Libraries updated
+
 1.0.1-alpha
 ----------------
 Fixed returning from permissions screen

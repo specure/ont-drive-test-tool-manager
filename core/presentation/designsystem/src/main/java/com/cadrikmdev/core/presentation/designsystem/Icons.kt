@@ -48,6 +48,10 @@ val FinishIcon: ImageVector
     @Composable
     get() = ImageVector.vectorResource(id = R.drawable.finish)
 
+val InfoIcon: ImageVector
+    @Composable
+    get() = ImageVector.vectorResource(id = R.drawable.info)
+
 val KeyboardArrowDownIcon: ImageVector
     @Composable
     get() = ImageVector.vectorResource(id = R.drawable.keyboard_arrow_down)
@@ -87,6 +91,10 @@ val RunOutlinedIcon: ImageVector
 val RunIcon: ImageVector
     @Composable
     get() = ImageVector.vectorResource(id = R.drawable.run)
+
+val SettingsIcon: ImageVector
+    @Composable
+    get() = ImageVector.vectorResource(id = R.drawable.settings)
 
 val StartIcon: ImageVector
     @Composable

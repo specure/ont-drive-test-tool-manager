@@ -9,12 +9,12 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 val DarkColorScheme = darkColorScheme(
-    primary = SignalTrackerManagerGreen,
+    primary = SignalTrackerManagerBlue,
     background = SignalTrackerManagerBlack,
     surface = SignalTrackerManagerDarkGray,
     secondary = SignalTrackerManagerWhite,
     tertiary = SignalTrackerManagerWhite,
-    primaryContainer = SignalTrackerManagerGreen30,
+    primaryContainer = SignalTrackerManagerBlue30,
     onPrimary = SignalTrackerManagerBlack,
     onBackground = SignalTrackerManagerWhite,
     onSurface = SignalTrackerManagerWhite,

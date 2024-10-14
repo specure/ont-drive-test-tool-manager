@@ -38,7 +38,7 @@ import com.cadrikmdev.core.presentation.designsystem.ArrowLeftIcon
 import com.cadrikmdev.core.presentation.designsystem.LogoIcon
 import com.cadrikmdev.core.presentation.designsystem.Poppins
 import com.cadrikmdev.core.presentation.designsystem.R
-import com.cadrikmdev.core.presentation.designsystem.SignalTrackerManagerGreen
+import com.cadrikmdev.core.presentation.designsystem.SignalTrackerManagerBlue
 import com.cadrikmdev.core.presentation.designsystem.SignalTrackerManagerTheme
 import com.cadrikmdev.core.presentation.designsystem.components.util.DropDownItem
 
@@ -61,7 +61,7 @@ fun SignalTrackerManagerToolbar(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                startContent?.invoke()
+                startContent.invoke()
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = title,
@@ -100,6 +100,7 @@ fun SignalTrackerManagerToolbar(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .clickable {
+                                        isDropDownOpen = false
                                         onMenuItemClick(index)
                                     }
                                     .fillMaxWidth()
@@ -139,7 +140,7 @@ fun SignalTrackerManagerToolbarPreview() {
             modifier = Modifier.fillMaxWidth(),
             startContent = {
                 Icon(
-                    imageVector = LogoIcon, contentDescription = null, tint = SignalTrackerManagerGreen,
+                    imageVector = LogoIcon, contentDescription = null, tint = SignalTrackerManagerBlue,
                     modifier = Modifier.size(35.dp)
                 )
             },

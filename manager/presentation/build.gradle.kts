@@ -12,6 +12,7 @@ dependencies {
     implementation(libs.google.maps.android.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.timber)
+    implementation(libs.preference.library)
 
     implementation(projects.intercom.domain)
 
