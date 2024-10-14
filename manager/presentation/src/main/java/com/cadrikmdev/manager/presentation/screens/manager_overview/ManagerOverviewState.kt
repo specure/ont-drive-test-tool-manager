@@ -1,4 +1,4 @@
-package com.cadrikmdev.manager.presentation.manager_overview
+package com.cadrikmdev.manager.presentation.screens.manager_overview
 
 import com.cadrikmdev.intercom.domain.client.TrackingDevice
 

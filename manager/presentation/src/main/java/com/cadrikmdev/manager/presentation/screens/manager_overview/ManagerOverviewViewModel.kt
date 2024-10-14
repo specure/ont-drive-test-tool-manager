@@ -1,6 +1,10 @@
-package com.cadrikmdev.manager.presentation.manager_overview
+package com.cadrikmdev.manager.presentation.screens.manager_overview
 
 import android.Manifest
+import android.content.Context
+import android.media.Ringtone
+import android.media.RingtoneManager
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -20,6 +24,7 @@ import timber.log.Timber
 
 
 class ManagerOverviewViewModel(
+    private val appContext: Context,
     private val applicationScope: CoroutineScope,
     private val bluetoothService: BluetoothClientService,
     private val androidBluetoothService: BluetoothService,
@@ -52,6 +57,12 @@ class ManagerOverviewViewModel(
 //        }
     }
 
+    private fun playAlertSound() {
+        val alert: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val ringtone: Ringtone = RingtoneManager.getRingtone(appContext, alert)
+        ringtone.play()
+    }
+
     private fun manageBluetoothDevices() {
         if (permissionHandler.isPermissionGranted(Manifest.permission.BLUETOOTH_CONNECT) && state.isBluetoothAdapterEnabled) {
             bluetoothService.observeConnectedDevices(DeviceType.TRACKER)
@@ -64,6 +75,16 @@ class ManagerOverviewViewModel(
 
             bluetoothService.trackingDevices
                 .onEach { devices ->
+
+                    val previousState = state.copy()
+                    val newErrorDevices = previousState.managedDevices.filter { prevDeviceState ->
+                        devices.filter { currentDeviceState ->
+                            currentDeviceState.value.isStateChangedOnTheSameDevice(prevDeviceState) && currentDeviceState.value.isErrorState()
+                        }.isNotEmpty()
+                    }
+                    if (newErrorDevices.isNotEmpty()) {
+                        playAlertSound()
+                    }
                     state = state.copy(
                         managedDevices = devices.values.toList()
                     )
@@ -113,6 +134,9 @@ class ManagerOverviewViewModel(
                 updateBluetoothAdapterState()
                 updatePermissionsState()
                 manageBluetoothDevices()
+            }
+            is ManagerOverviewEvent.OnMeasurementError -> {
+                playAlertSound()
             }
         }
     }

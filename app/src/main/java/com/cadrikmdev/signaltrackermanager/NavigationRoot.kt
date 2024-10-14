@@ -9,9 +9,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.cadrikmdev.manager.presentation.about.AboutScreenNav
 import com.cadrikmdev.manager.presentation.about.AboutScreenRoot
-import com.cadrikmdev.manager.presentation.manager_overview.ManagerOverviewScreenRoot
-import com.cadrikmdev.manager.presentation.settings.SettingsScreenRoot
-import com.cadrikmdev.manager.presentation.settings.navigation.SettingsScreenNav
+import com.cadrikmdev.manager.presentation.screens.manager_overview.ManagerOverviewScreenRoot
+import com.cadrikmdev.manager.presentation.screens.settings.SettingsScreenRoot
+import com.cadrikmdev.manager.presentation.screens.settings.navigation.SettingsScreenNav
 import com.cadrikmdev.permissions.presentation.screen.permissions.PermissionsScreen
 import com.cadrikmdev.permissions.presentation.util.openAppSettings
 

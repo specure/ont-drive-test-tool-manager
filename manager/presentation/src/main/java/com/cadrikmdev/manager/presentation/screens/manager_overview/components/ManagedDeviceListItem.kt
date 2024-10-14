@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 
-package com.cadrikmdev.manager.presentation.manager_overview.components
+package com.cadrikmdev.manager.presentation.screens.manager_overview.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background

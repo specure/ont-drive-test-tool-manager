@@ -1,4 +1,4 @@
-package com.cadrikmdev.manager.presentation.settings
+package com.cadrikmdev.manager.presentation.screens.settings
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -57,7 +57,6 @@ fun SettingsScreen(
                         key = "alert_sound_on_measurement_error_enabled",
                         title = { Text(text = stringResource(id = R.string.play_sound_on_measurement_error)) },
                         defaultValue = true,
-                        enabled = {false},
                     )
 
                 }

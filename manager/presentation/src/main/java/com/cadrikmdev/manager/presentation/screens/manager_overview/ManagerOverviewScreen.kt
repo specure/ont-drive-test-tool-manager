@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.cadrikmdev.manager.presentation.manager_overview
+package com.cadrikmdev.manager.presentation.screens.manager_overview
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,7 +36,7 @@ import com.cadrikmdev.core.presentation.designsystem.components.SignalTrackerMan
 import com.cadrikmdev.core.presentation.designsystem.components.SignalTrackerManagerToolbar
 import com.cadrikmdev.core.presentation.designsystem.components.util.DropDownItem
 import com.cadrikmdev.manager.presentation.R
-import com.cadrikmdev.manager.presentation.manager_overview.components.ManagedDeviceListItem
+import com.cadrikmdev.manager.presentation.screens.manager_overview.components.ManagedDeviceListItem
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

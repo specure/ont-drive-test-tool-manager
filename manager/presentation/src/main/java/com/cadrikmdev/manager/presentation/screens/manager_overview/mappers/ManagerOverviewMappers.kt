@@ -1,4 +1,4 @@
-package com.cadrikmdev.manager.presentation.manager_overview.mappers
+package com.cadrikmdev.manager.presentation.screens.manager_overview.mappers
 
 import com.cadrikmdev.intercom.domain.client.DeviceNode
 import com.cadrikmdev.intercom.domain.client.TrackingDevice

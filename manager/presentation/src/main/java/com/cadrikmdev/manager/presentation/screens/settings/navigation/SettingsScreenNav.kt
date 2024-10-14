@@ -1,4 +1,4 @@
-package com.cadrikmdev.manager.presentation.settings.navigation
+package com.cadrikmdev.manager.presentation.screens.settings.navigation
 
 import kotlinx.serialization.Serializable
 
