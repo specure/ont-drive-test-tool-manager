@@ -3,6 +3,8 @@
 Added About screen
 Added Settings screen
 Libraries updated
+Added sound alarm if error occurs in the test
+Added a setting to turn on/off alarm sound on the test error
 
 1.0.1-alpha
 ----------------
