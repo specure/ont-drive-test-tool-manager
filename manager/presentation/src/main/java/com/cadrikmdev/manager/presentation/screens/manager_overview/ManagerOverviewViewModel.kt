@@ -10,7 +10,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cadrikmdev.core.domain.config.Config
 import com.cadrikmdev.core.domain.service.BluetoothService
+import com.cadrikmdev.core.presentation.ui.config.AppConfig
 import com.cadrikmdev.intercom.domain.client.BluetoothClientService
 import com.cadrikmdev.intercom.domain.client.DeviceType
 import com.cadrikmdev.intercom.domain.message.TrackerAction
@@ -25,6 +27,7 @@ import timber.log.Timber
 
 class ManagerOverviewViewModel(
     private val appContext: Context,
+    private val appConfig: Config,
     private val applicationScope: CoroutineScope,
     private val bluetoothService: BluetoothClientService,
     private val androidBluetoothService: BluetoothService,
@@ -58,9 +61,11 @@ class ManagerOverviewViewModel(
     }
 
     private fun playAlertSound() {
-        val alert: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-        val ringtone: Ringtone = RingtoneManager.getRingtone(appContext, alert)
-        ringtone.play()
+        if (appConfig.isAlertSoundOnTestErrorEnabled()) {
+            val alert: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            val ringtone: Ringtone = RingtoneManager.getRingtone(appContext, alert)
+            ringtone.play()
+        }
     }
 
     private fun manageBluetoothDevices() {
