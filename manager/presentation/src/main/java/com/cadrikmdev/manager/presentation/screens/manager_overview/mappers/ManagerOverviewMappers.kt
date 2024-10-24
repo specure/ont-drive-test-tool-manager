@@ -9,6 +9,7 @@ fun DeviceNode.toTrackingDeviceUI(): TrackingDevice {
         status = this.status.toString(),
         name = this.displayName,
         connected = this.connected,
+        deviceAppVersion = this.deviceAppVersion,
         updateTimestamp = lastUpdatedTimestamp
     )
 }

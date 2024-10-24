@@ -40,6 +40,7 @@ class AndroidBluetoothServerService(
         MeasurementProgress(
             state = MeasurementState.NOT_ACTIVATED,
             error = null,
+            appVersion = null,
             timestamp = System.currentTimeMillis()
         )
     }

@@ -5,6 +5,7 @@ data class TrackingDevice(
     val address: String,
     val status: String,
     val connected: Boolean,
+    val deviceAppVersion: String,
     val updateTimestamp: Long,
 ) {
     fun isStateChangedOnTheSameDevice(otherDevice: TrackingDevice): Boolean {

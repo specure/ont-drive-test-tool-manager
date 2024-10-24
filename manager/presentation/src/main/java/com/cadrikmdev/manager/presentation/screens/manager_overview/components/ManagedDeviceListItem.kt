@@ -59,7 +59,7 @@ fun ManagedDeviceListItem(
                 }
             )
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -89,6 +89,19 @@ fun ManagedDeviceListItem(
             Text(
                 text = trackingDeviceUi.updateTimestamp.toDuration(DurationUnit.MILLISECONDS)
                     .toLocalTime().toString() ?: "-",
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(id = R.string.app_version),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = trackingDeviceUi.deviceAppVersion,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
@@ -167,6 +180,7 @@ private fun RunListItemPreview() {
                 address = "47:51:53:55:88:56:FE",
                 status = "idle",
                 connected = false,
+                deviceAppVersion = "1.3.0",
                 updateTimestamp = 15616561513
             ),
             onDeleteClick = { },

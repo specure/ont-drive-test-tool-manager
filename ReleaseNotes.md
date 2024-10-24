@@ -1,3 +1,7 @@
+1.2.0
+----------------
+Ability to display version number of connected app (if provided)
+
 1.1.0-alpha
 ----------------
 Added About screen
