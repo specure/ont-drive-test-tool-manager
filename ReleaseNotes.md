@@ -1,6 +1,8 @@
 1.2.0
 ----------------
 Ability to display version number of connected app (if provided)
+Configured proguard rules for release build
+Added possibility to self-update via github to about screen
 
 1.1.0-alpha
 ----------------
