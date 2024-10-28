@@ -3,12 +3,19 @@ plugins {
 }
 
 android {
-    namespace = "com.cadrikmdev.signaltrackermanager"
+    namespace = "com.specure.signaltrackermanager"
 
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true // Disable R8 for release builds
+            isShrinkResources = true
         }
     }
 }
@@ -70,4 +77,6 @@ dependencies {
     implementation(projects.intercom.presentation)
     implementation(projects.intercom.domain)
     implementation(projects.intercom.data)
+    implementation(projects.updater.data)
+    implementation(projects.updater.domain)
 }

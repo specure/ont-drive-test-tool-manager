@@ -22,4 +22,16 @@
     <string name="general">General</string>
     <string name="play_sound_on_measurement_error">Play sound on measurement error</string>
     <string name="app_version">App version:</string>
+    <string name="update_status">Update status:</string>
+    <string name="checking">Checking</string>
+    <string name="download_failed">Download failed</string>
+    <string name="downloading">Downloading</string>
+    <string name="error">Error</string>
+    <string name="idle">Idle</string>
+    <string name="installing">Installing</string>
+    <string name="new_version_found">New version found %1$s</string>
+    <string name="no_new_version">No new version</string>
+    <string name="install_update">Install update</string>
+    <string name="checking_failed">Checking failed</string>
+    <string name="check_for_updates">Check for updates</string>
 </resources>

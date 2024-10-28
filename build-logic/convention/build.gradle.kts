@@ -2,7 +2,7 @@ plugins {
     `kotlin-dsl`
 }
 
-group = "com.cadrikmdev.signaltrackermanager.buildlogic"
+group = "com.specure.signaltrackermanager.buildlogic"
 
 dependencies {
     compileOnly(libs.android.gradlePlugin)

@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.cadrikmdev.signaltrackermanager.permissions.data"
+    namespace = "com.specure.signaltrackermanager.permissions.data"
 }
 
 dependencies {

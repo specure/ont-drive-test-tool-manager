@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.cadrikmdev.manager.presentation"
+    namespace = "com.specure.manager.presentation"
 }
 
 dependencies {
@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.manager.domain)
     implementation(projects.permissions.domain)
     implementation(projects.permissions.presentation)
+    implementation(projects.updater.domain)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

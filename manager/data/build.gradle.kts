@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.cadrikmdev.manager.data"
+    namespace = "com.specure.manager.data"
 }
 
 dependencies {

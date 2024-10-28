@@ -23,6 +23,7 @@ materialIconsExtended = "1.7.3"
 foundationLayoutAndroid = "1.7.3"
 uiToolingPreviewAndroid = "1.7.3"
 navigationCompose = "2.8.2"
+process-phoenix = "3.0.0"
 securityCryptoKtx = "1.1.0-alpha06"
 timber = "5.0.1"
 ksp = "2.0.0-1.0.22"
@@ -58,8 +59,8 @@ composeUiTestManifest = "1.7.3"
 coroutines-test = "1.8.1"
 
 # Project versions
-projectApplicationId = "com.cadrikmdev.signaltrackermanager"
-projectVersionName = "1.1.0-alpha"
+projectApplicationId = "com.specure.signaltrackermanager"
+projectVersionName = "1.2.0"
 projectMinSdkVersion = "28"
 projectTargetSdkVersion = "34"
 projectCompileSdkVersion = "34"
@@ -100,7 +101,6 @@ koin-android-workmanager = { group = "io.insert-koin", name = "koin-androidx-wor
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
 koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }
-
 ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
@@ -109,6 +109,7 @@ ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "k
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktorServerCallLogging" }
 preference-library = { group = "me.zhanghai.compose.preference", name = "library", version.ref = "preferenceLib" }
+process-phoenix = { group = "com.jakewharton", name = "process-phoenix", version.ref = "process-phoenix" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
