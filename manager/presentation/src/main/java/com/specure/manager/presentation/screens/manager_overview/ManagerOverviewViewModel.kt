@@ -12,15 +12,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.specure.core.domain.config.Config
 import com.specure.core.domain.service.BluetoothService
-import com.specure.core.presentation.ui.config.AppConfig
+import com.specure.core.presentation.ui.UiText
 import com.specure.intercom.domain.client.BluetoothClientService
 import com.specure.intercom.domain.client.DeviceType
 import com.specure.intercom.domain.message.TrackerAction
+import com.specure.manager.presentation.BuildConfig
+import com.specure.manager.presentation.R
 import com.specure.permissions.domain.PermissionHandler
 import com.specure.permissions.presentation.appPermissions
+import com.specure.updater.domain.Updater
+import com.specure.updater.domain.UpdatingStatus
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -32,32 +38,36 @@ class ManagerOverviewViewModel(
     private val bluetoothService: BluetoothClientService,
     private val androidBluetoothService: BluetoothService,
     private val permissionHandler: PermissionHandler,
+    private val updater: Updater,
 ) : ViewModel() {
 
     var state by mutableStateOf(ManagerOverviewState())
         private set
 
+    var latestReleasedVersionStatus = updater.latestReleasedVersionStatus.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(),
+        initialValue = UpdatingStatus.Idle
+    )
+
+    val trackerRepoLink = BuildConfig.GITHUB_API_TRACKER_REPO_URL
 
     init {
         permissionHandler.setPermissionsNeeded(
             appPermissions
         )
 
+        latestReleasedVersionStatus.onEach { updaterState ->
+            if (updaterState is UpdatingStatus.NewVersionFound) {
+                state = state.copy(
+                    lastTrackerVersion = updaterState.version
+                )
+            }
+        }.launchIn(viewModelScope)
+
+        checkTrackerLatestVersion()
+
         manageBluetoothDevices()
-
-
-//        viewModelScope.launch {
-//            delay(2000)
-//            state = state.copy(
-//                managedDevices = listOf(
-//                    TrackingDeviceUi(
-//                        "Samsung A52",
-//                        "running",
-//                        System.currentTimeMillis()
-//                    )
-//                )
-//            )
-//        }
     }
 
     private fun playAlertSound() {
@@ -90,8 +100,20 @@ class ManagerOverviewViewModel(
                     if (newErrorDevices.isNotEmpty()) {
                         playAlertSound()
                     }
+                    val updateCheckDevices = devices.values.map { device ->
+                        val latestVersion = updater.getLatestVersion(device.deviceAppVersion, state.lastTrackerVersion)
+                        if (latestVersion != null && device.deviceAppVersion != latestVersion) {
+                            device.copy(
+                                deviceAppVersion = "${device.deviceAppVersion} (${UiText.StringResource(
+                                    R.string.udpateAvailable).asString(appContext)})"
+                            )
+                        } else {
+                            device
+                        }
+
+                    }
                     state = state.copy(
-                        managedDevices = devices.values.toList()
+                        managedDevices = updateCheckDevices.toList()
                     )
                 }
                 .launchIn(viewModelScope)
@@ -129,7 +151,16 @@ class ManagerOverviewViewModel(
             ManagerOverviewAction.OnOpenBluetoothSettingsClick -> {
                 androidBluetoothService.openBluetoothSettings()
             }
+            ManagerOverviewAction.OnCheckTrackerLatestVersionClick -> {
+                checkTrackerLatestVersion()
+            }
             else -> Unit
+        }
+    }
+
+    private fun checkTrackerLatestVersion() {
+        viewModelScope.launch {
+            updater.getLatestReleasedVersion(trackerRepoLink)
         }
     }
 

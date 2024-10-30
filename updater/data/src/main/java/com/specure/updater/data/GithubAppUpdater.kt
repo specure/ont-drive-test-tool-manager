@@ -39,12 +39,15 @@ class GithubAppUpdater(
     private val _progressState = MutableSharedFlow<UpdatingStatus>(replay = 1)
     override val updateStatus: SharedFlow<UpdatingStatus> = _progressState
 
+    private val _latestReleasedVersionStatus = MutableSharedFlow<UpdatingStatus>(replay = 1)
+    override val latestReleasedVersionStatus: SharedFlow<UpdatingStatus> = _latestReleasedVersionStatus
+
     private var updateFile: File? = null
     private var versionName: String? = null
     private var downloadUrl: String? = null
 
-    override suspend fun checkAndInstall() {
-        checkForUpdate()
+    override suspend fun checkAndInstall(repoUrl: String) {
+        checkForSelfUpdate(repoUrl)
         updateStatus.first { status ->
             if (status is UpdatingStatus.NewVersionFound) {
                 Timber.d("New version found and installing")
@@ -59,17 +62,34 @@ class GithubAppUpdater(
         }
     }
 
-    override suspend fun checkForUpdate() {
+    override suspend fun getLatestReleasedVersion(repoUrl: String) {
+        clearState()
+        _latestReleasedVersionStatus.emit(UpdatingStatus.Checking)
+        val latestRelease = fetchLatestRelease(repoUrl)
+        Timber.d("Latest release found: $latestRelease")
+        latestRelease?.let { release ->
+            val apkAsset = release.assets.firstOrNull { it.name.endsWith(".apk") }
+            apkAsset?.let { apk ->
+                val repoVersion = release.tag_name
+                _latestReleasedVersionStatus.emit(UpdatingStatus.NewVersionFound(repoVersion))
+                Timber.d("Latest release found with version: $repoVersion")
+                return
+            }
+        }
+        _latestReleasedVersionStatus.emit(UpdatingStatus.NoNewVersion)
+    }
+
+    override suspend fun checkForSelfUpdate(repoUrl: String) {
         clearState()
         _progressState.emit(UpdatingStatus.Checking)
-        val latestRelease = fetchLatestRelease()
+        val latestRelease = fetchLatestRelease(repoUrl)
         Timber.d("Latest release found: $latestRelease")
         latestRelease?.let { release ->
             val apkAsset = release.assets.firstOrNull { it.name.endsWith(".apk") }
             val packageInfo = appContext.packageManager.getPackageInfo(appContext.packageName, 0)
             apkAsset?.let { apk ->
                 val repoVersion = release.tag_name
-                val latestVersion = getVersionToInstall(repoVersion, packageInfo.versionName)
+                val latestVersion = getLatestVersion(repoVersion, packageInfo.versionName)
                 Timber.d("Latest release version: ${release.tag_name} vs. installed: ${packageInfo.versionName} - install: $latestVersion")
                 if (repoVersion == latestVersion) {
                     versionName = latestVersion
@@ -84,7 +104,7 @@ class GithubAppUpdater(
         _progressState.emit(UpdatingStatus.NoNewVersion)
     }
 
-    override suspend fun downloadAndInstallUpdate() {
+    override suspend fun downloadAndInstallSelfUpdate() {
         if (downloadUrl.isNullOrEmpty() || updateFile == null) {
             _progressState.emit(UpdatingStatus.ErrorDownloading("No file"))
         }
@@ -98,9 +118,9 @@ class GithubAppUpdater(
         _progressState.emit(UpdatingStatus.ErrorDownloading("Error during downloading"))
     }
 
-    private suspend fun fetchLatestRelease(): Release? {
+    private suspend fun fetchLatestRelease(repoUrl: String): Release? {
         return try {
-            jsonClient.get("${BuildConfig.GITHUB_API_MANAGER_REPO_URL}/releases/latest").body<Release>()
+            jsonClient.get("$repoUrl/releases/latest").body<Release>()
         } catch (e: Exception) {
             yield()
             e.printStackTrace()
@@ -214,15 +234,14 @@ class GithubAppUpdater(
         context.startActivity(intent)
     }
 
-    private fun getVersionToInstall(version1: String?, version2: String?): String? {
+    override fun getLatestVersion(version1: String?, version2: String?): String? {
         if (version1 == null || version2 == null) {
             return null
         }
         val version1Parts = version1.split(".")
         val version2Parts = version2.split(".")
         if (version1Parts.size != version2Parts.size) {
-            // manage here if you change version numbering in some way that it will contain more or less parts
-            throw IllegalArgumentException("Version strings have a different length")
+            return null
         }
         version1Parts.zip(version2Parts) { first, second ->
             when {

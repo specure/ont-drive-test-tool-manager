@@ -4,7 +4,22 @@ This project meant to be as a remote controller via bluetooth for SignalTracker 
 
 ## Build:
 
-- no special build steps, just pull and run
+### Register app in the firebase or remove Firebase integration
+
+Register app in the firebase and put google-services.json in the "app" folder (or remove firebase
+integration by removing from project level build.gradle.kts file
+
+"alias(libs.plugins.google.services) apply false"
+
+and from app build.gradle.kts file:
+
+"implementation(platform(libs.firebase))"
+
+and from AndroidApplicationConventionPlugin file:
+
+"apply("com.google.gms.google-services")"
+
+and sync gradle)
 
 ## Manual:
 

@@ -7,6 +7,7 @@ sealed interface ManagerOverviewAction {
     data class OnStopClick(val address: String) : ManagerOverviewAction
     data class OnConnectClick(val address: String) : ManagerOverviewAction
     data class DeleteManager(val address: String) : ManagerOverviewAction
+    data object OnCheckTrackerLatestVersionClick : ManagerOverviewAction
     data object OnSettingsClick : ManagerOverviewAction
     data object OnAboutClick : ManagerOverviewAction
 }

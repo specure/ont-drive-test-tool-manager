@@ -1,3 +1,8 @@
+1.2.1
+----------------
+Info about tracker version on overview screen with hint about update available for connected devices providing version
+Added Firebase
+
 1.2.0
 ----------------
 Ability to display version number of connected app (if provided)

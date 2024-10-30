@@ -18,15 +18,17 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
 import com.specure.core.presentation.designsystem.InfoIcon
 import com.specure.core.presentation.designsystem.SettingsIcon
@@ -37,6 +39,8 @@ import com.specure.core.presentation.designsystem.components.SignalTrackerManage
 import com.specure.core.presentation.designsystem.components.util.DropDownItem
 import com.specure.manager.presentation.R
 import com.specure.manager.presentation.screens.manager_overview.components.ManagedDeviceListItem
+import com.specure.updater.domain.UpdatingStatus
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -48,6 +52,7 @@ fun ManagerOverviewScreenRoot(
 ) {
     ManagerOverviewScreen(
         state = viewModel.state,
+        updateState = viewModel.latestReleasedVersionStatus.collectAsState(),
         onAction = { action ->
             when (action) {
                 ManagerOverviewAction.OnResolvePermissionClick -> onResolvePermissionClick()
@@ -65,6 +70,7 @@ fun ManagerOverviewScreenRoot(
 @Composable
 private fun ManagerOverviewScreen(
     state: ManagerOverviewState,
+    updateState: State<UpdatingStatus>,
     onAction: (ManagerOverviewAction) -> Unit,
     onEvent: (ManagerOverviewEvent) -> Unit
 ) {
@@ -147,6 +153,7 @@ private fun ManagerOverviewScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(text = stringResource(id = R.string.permission_required))
+                    @Suppress("KotlinConstantConditions")
                     if (state.isPermissionRequired) {
                         SignalTrackerManagerOutlinedActionButton(
                             modifier = Modifier.padding(start = 16.dp),
@@ -167,26 +174,79 @@ private fun ManagerOverviewScreen(
                     Text(text = stringResource(id = R.string.please_connect_signal_tracking_device))
                 }
             } else {
-                LazyColumn(
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .nestedScroll(scrollBehavior.nestedScrollConnection),
-                    contentPadding = PaddingValues(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                        .padding(8.dp),
                 ) {
-                    items(
-                        items = state.managedDevices,
-                        key = {
-                            it.address
-                        }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        ManagedDeviceListItem(
-                            trackingDeviceUi = it,
-                            onDeleteClick = { address -> onAction(ManagerOverviewAction.DeleteManager(address)) },
-                            onStopClick = { address -> onAction(ManagerOverviewAction.OnStopClick(address)) },
-                            onStartClick = { address -> onAction(ManagerOverviewAction.OnStartClick(address)) },
-                            onConnectClick = { address -> onAction(ManagerOverviewAction.OnConnectClick(address)) },
-                        )
+                        Column(
+                        ) {
+                            Text(text = stringResource(id = R.string.latest_tracker_version))
+                            Text(text = state.lastTrackerVersion ?: "-")
+                        }
+                        SignalTrackerManagerOutlinedActionButton(
+                            modifier = Modifier.padding(start = 16.dp),
+                            text = stringResource(id = R.string.recheck),
+                            isLoading =updateState.value in listOf(
+                                UpdatingStatus.Downloading,
+                                UpdatingStatus.Checking,
+                                UpdatingStatus.InstallingSilently,
+                            )
+                        ) {
+                            onAction(ManagerOverviewAction.OnCheckTrackerLatestVersionClick)
+                        }
+                    }
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .nestedScroll(scrollBehavior.nestedScrollConnection),
+                        contentPadding = PaddingValues(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        items(
+                            items = state.managedDevices,
+                            key = {
+                                it.address
+                            }
+                        ) {
+                            ManagedDeviceListItem(
+                                trackingDeviceUi = it,
+                                onDeleteClick = { address ->
+                                    onAction(
+                                        ManagerOverviewAction.DeleteManager(
+                                            address
+                                        )
+                                    )
+                                },
+                                onStopClick = { address ->
+                                    onAction(
+                                        ManagerOverviewAction.OnStopClick(
+                                            address
+                                        )
+                                    )
+                                },
+                                onStartClick = { address ->
+                                    onAction(
+                                        ManagerOverviewAction.OnStartClick(
+                                            address
+                                        )
+                                    )
+                                },
+                                onConnectClick = { address ->
+                                    onAction(
+                                        ManagerOverviewAction.OnConnectClick(
+                                            address
+                                        )
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -202,6 +262,7 @@ private fun RunOverviewScreenPreview() {
             state = ManagerOverviewState(
                 isPermissionRequired = true
             ),
+            updateState = MutableStateFlow<UpdatingStatus>(UpdatingStatus.Idle).collectAsState(),
             onAction = {},
             onEvent = {},
         )

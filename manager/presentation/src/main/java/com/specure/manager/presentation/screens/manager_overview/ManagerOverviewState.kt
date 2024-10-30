@@ -6,4 +6,5 @@ data class ManagerOverviewState(
     val isPermissionRequired: Boolean = true,
     val isBluetoothAdapterEnabled: Boolean = false,
     val managedDevices: List<TrackingDevice> = emptyList(),
+    val lastTrackerVersion: String? = null,
 )

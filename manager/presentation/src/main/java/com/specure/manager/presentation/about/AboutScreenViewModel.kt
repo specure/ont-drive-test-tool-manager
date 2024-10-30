@@ -3,6 +3,7 @@ package com.specure.manager.presentation.about
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.specure.core.domain.package_info.PackageInfoProvider
+import com.specure.manager.presentation.BuildConfig
 import com.specure.updater.domain.Updater
 import com.specure.updater.domain.UpdatingStatus
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,13 +26,13 @@ class AboutScreenViewModel(
         when (action) {
             AboutScreenAction.OnCheckUpdateClick -> {
                 viewModelScope.launch {
-                    updater.checkForUpdate()
+                    updater.checkForSelfUpdate(BuildConfig.GITHUB_API_MANAGER_REPO_URL)
                 }
             }
 
             AboutScreenAction.OnInstallUpdateClick -> {
                 viewModelScope.launch {
-                    updater.downloadAndInstallUpdate()
+                    updater.downloadAndInstallSelfUpdate()
                 }
             }
         }

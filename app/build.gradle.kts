@@ -79,4 +79,6 @@ dependencies {
     implementation(projects.intercom.data)
     implementation(projects.updater.data)
     implementation(projects.updater.domain)
+
+    implementation(platform(libs.firebase))
 }
