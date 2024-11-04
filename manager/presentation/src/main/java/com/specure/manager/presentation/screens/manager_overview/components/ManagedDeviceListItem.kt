@@ -32,6 +32,7 @@ import com.specure.core.presentation.designsystem.components.SignalTrackerManage
 import com.specure.manager.presentation.R
 import com.specure.intercom.domain.client.TrackingDevice
 import com.specure.intercom.domain.data.MeasurementState
+import com.specure.intercom.presentation.mappers.toUiString
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -114,7 +115,7 @@ fun ManagedDeviceListItem(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = trackingDeviceUi.status,
+                text = trackingDeviceUi.status.toUiString(),
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
@@ -137,7 +138,7 @@ fun ManagedDeviceListItem(
             SignalTrackerManagerActionButton(
                 text = stringResource(id = R.string.start),
                 modifier = Modifier.weight(1f),
-                enabled = (trackingDeviceUi.connected && trackingDeviceUi.status != MeasurementState.RUNNING.toString() && trackingDeviceUi.status != MeasurementState.NOT_ACTIVATED.toString()),
+                enabled = (trackingDeviceUi.connected && trackingDeviceUi.status != MeasurementState.RUNNING && trackingDeviceUi.status != MeasurementState.NOT_ACTIVATED),
                 isLoading = false
             ) {
                 onStartClick(trackingDeviceUi.address)
@@ -145,7 +146,7 @@ fun ManagedDeviceListItem(
             SignalTrackerManagerActionButton(
                 text = stringResource(id = R.string.stop),
                 modifier = Modifier.weight(1f),
-                enabled = (trackingDeviceUi.connected && trackingDeviceUi.status == MeasurementState.RUNNING.toString() && trackingDeviceUi.status != MeasurementState.NOT_ACTIVATED.toString()),
+                enabled = (trackingDeviceUi.connected && trackingDeviceUi.status == MeasurementState.RUNNING && trackingDeviceUi.status != MeasurementState.NOT_ACTIVATED),
                 isLoading = false
             ) {
                 onStopClick(trackingDeviceUi.address)
@@ -178,7 +179,7 @@ private fun RunListItemPreview() {
             trackingDeviceUi = TrackingDevice(
                 name = "Telephone model name",
                 address = "47:51:53:55:88:56:FE",
-                status = "idle",
+                status = MeasurementState.IDLE,
                 connected = false,
                 deviceAppVersion = "1.3.0",
                 updateTimestamp = 15616561513

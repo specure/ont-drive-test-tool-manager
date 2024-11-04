@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.permissions.domain)
     implementation(projects.permissions.presentation)
     implementation(projects.updater.domain)
+    implementation(projects.intercom.presentation)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
