@@ -138,7 +138,7 @@ fun ManagedDeviceListItem(
             SignalTrackerManagerActionButton(
                 text = stringResource(id = R.string.start),
                 modifier = Modifier.weight(1f),
-                enabled = (trackingDeviceUi.connected && trackingDeviceUi.status != MeasurementState.RUNNING && trackingDeviceUi.status != MeasurementState.NOT_ACTIVATED),
+                enabled = (trackingDeviceUi.connected && trackingDeviceUi.status !in listOf(MeasurementState.RUNNING, MeasurementState.NOT_ACTIVATED, MeasurementState.ERROR, MeasurementState.SPEEDTEST_ERROR)),
                 isLoading = false
             ) {
                 onStartClick(trackingDeviceUi.address)
@@ -146,7 +146,7 @@ fun ManagedDeviceListItem(
             SignalTrackerManagerActionButton(
                 text = stringResource(id = R.string.stop),
                 modifier = Modifier.weight(1f),
-                enabled = (trackingDeviceUi.connected && trackingDeviceUi.status == MeasurementState.RUNNING && trackingDeviceUi.status != MeasurementState.NOT_ACTIVATED),
+                enabled = (trackingDeviceUi.connected && trackingDeviceUi.status in listOf(MeasurementState.RUNNING, MeasurementState.ERROR, MeasurementState.SPEEDTEST_ERROR) && trackingDeviceUi.status != MeasurementState.NOT_ACTIVATED),
                 isLoading = false
             ) {
                 onStopClick(trackingDeviceUi.address)

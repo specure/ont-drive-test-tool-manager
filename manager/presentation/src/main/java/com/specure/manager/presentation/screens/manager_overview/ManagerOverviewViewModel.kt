@@ -94,7 +94,7 @@ class ManagerOverviewViewModel(
                     val previousState = state.copy()
                     val newErrorDevices = previousState.managedDevices.filter { prevDeviceState ->
                         devices.filter { currentDeviceState ->
-                            currentDeviceState.value.isStateChangedOnTheSameDevice(prevDeviceState) && currentDeviceState.value.isErrorState()
+                            currentDeviceState.value.isStateChangedOnTheSameDevice(prevDeviceState) && (currentDeviceState.value.isErrorState() || currentDeviceState.value.isSpeedTestErrorState())
                         }.isNotEmpty()
                     }
                     if (newErrorDevices.isNotEmpty()) {
