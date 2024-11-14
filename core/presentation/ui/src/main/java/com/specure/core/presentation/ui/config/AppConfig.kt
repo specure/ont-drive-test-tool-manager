@@ -9,6 +9,7 @@ class AppConfig(
 
     companion object {
         const val IS_ALERT_SOUND_ON_TEST_ERROR_ENABLED_BY_DEFAULT = true
+        const val KEEP_SCREEN_ON_ENABLED_BY_DEFAULT = true
     }
 
     override fun isAlertSoundOnTestErrorEnabled(): Boolean {
@@ -24,5 +25,20 @@ class AppConfig(
 
     override fun getIsAlertSoundOnTestErrorEnabledDefault(): Boolean {
         return IS_ALERT_SOUND_ON_TEST_ERROR_ENABLED_BY_DEFAULT
+    }
+
+    override fun isKeepScreenOnEnabled(): Boolean {
+        return preferences.getBoolean(
+            Config.KEEP_SCREEN_ON_ENABLED_CONFIG_KEY,
+            getKeepScreenOnEnabledDefault()
+        )
+    }
+
+    override fun setKeepScreenOnEnabled(enabled: Boolean) {
+        preferences.edit().putBoolean(Config.KEEP_SCREEN_ON_ENABLED_CONFIG_KEY, enabled).apply()
+    }
+
+    override fun getKeepScreenOnEnabledDefault(): Boolean {
+        return KEEP_SCREEN_ON_ENABLED_BY_DEFAULT
     }
 }

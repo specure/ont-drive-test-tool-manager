@@ -164,12 +164,19 @@ class ManagerOverviewViewModel(
         }
     }
 
+    private fun updateSetPreferences() {
+        state = state.copy(
+            keepScreenOn = appConfig.isKeepScreenOnEnabled()
+        )
+    }
+
     fun onEvent(event: ManagerOverviewEvent) {
         when (event) {
             is ManagerOverviewEvent.OnResumed -> {
                 updateBluetoothAdapterState()
                 updatePermissionsState()
                 manageBluetoothDevices()
+                updateSetPreferences()
             }
             is ManagerOverviewEvent.OnMeasurementError -> {
                 playAlertSound()

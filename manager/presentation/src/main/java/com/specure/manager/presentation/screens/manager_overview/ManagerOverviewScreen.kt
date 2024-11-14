@@ -2,6 +2,10 @@
 
 package com.specure.manager.presentation.screens.manager_overview
 
+import android.app.Activity
+import android.content.Context
+import android.os.PowerManager
+import android.view.WindowManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -24,9 +29,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
@@ -37,6 +44,7 @@ import com.specure.core.presentation.designsystem.components.SignalTrackerManage
 import com.specure.core.presentation.designsystem.components.SignalTrackerManagerScaffold
 import com.specure.core.presentation.designsystem.components.SignalTrackerManagerToolbar
 import com.specure.core.presentation.designsystem.components.util.DropDownItem
+import com.specure.core.presentation.ui.KeepScreenOn
 import com.specure.manager.presentation.R
 import com.specure.manager.presentation.screens.manager_overview.components.ManagedDeviceListItem
 import com.specure.updater.domain.UpdatingStatus
@@ -80,6 +88,9 @@ private fun ManagerOverviewScreen(
     )
     val lifecycleOwner = LocalLifecycleOwner.current
     val lifecycleState by lifecycleOwner.lifecycle.currentStateAsState()
+
+    KeepScreenOn(state.keepScreenOn)
+
     LaunchedEffect(lifecycleState) {
         when (lifecycleState) {
             Lifecycle.State.RESUMED -> {

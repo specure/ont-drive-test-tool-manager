@@ -7,4 +7,7 @@ data class ManagerOverviewState(
     val isBluetoothAdapterEnabled: Boolean = false,
     val managedDevices: List<TrackingDevice> = emptyList(),
     val lastTrackerVersion: String? = null,
-)
+    val keepScreenOn: Boolean = false
+) {
+
+}

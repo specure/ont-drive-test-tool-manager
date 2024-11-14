@@ -65,6 +65,11 @@ fun SettingsScreen(
                         title = { Text(text = stringResource(id = R.string.play_sound_on_measurement_error)) },
                         defaultValue = viewModel.appConfig.getIsAlertSoundOnTestErrorEnabledDefault(),
                     )
+                    switchPreference(
+                        key = Config.KEEP_SCREEN_ON_ENABLED_CONFIG_KEY,
+                        title = { Text(text = stringResource(id = R.string.keep_manager_screen_on)) },
+                        defaultValue = viewModel.appConfig.getKeepScreenOnEnabledDefault(),
+                    )
 
                 }
             }
