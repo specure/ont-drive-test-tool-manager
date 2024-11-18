@@ -1,3 +1,10 @@
+1.3.0
+----------------
+Human readable states
+Better shown error messages for speed test error
+Updated target sdk to 35
+Screen is kept on in manager view
+
 1.2.1
 ----------------
 Info about tracker version on overview screen with hint about update available for connected devices providing version
