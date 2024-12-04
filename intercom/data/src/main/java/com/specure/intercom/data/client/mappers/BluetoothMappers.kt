@@ -35,3 +35,20 @@ fun BluetoothDevice.toTrackingDevice(): TrackingDevice? {
         null
     }
 }
+
+fun com.specure.intercom.domain.data.BluetoothDevice.toTrackingDevice(): TrackingDevice? {
+    return try {
+        TrackingDevice(
+            name = this.name,
+            address =this.address,
+            connected = false,
+            status = MeasurementState.UNKNOWN,
+            deviceAppVersion = "",
+            updateTimestamp = System.currentTimeMillis()
+        )
+    } catch (e: SecurityException) {
+        e.printStackTrace()
+        Timber.e(e.message)
+        null
+    }
+}

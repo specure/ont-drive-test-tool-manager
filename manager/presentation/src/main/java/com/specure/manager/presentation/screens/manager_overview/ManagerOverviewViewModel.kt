@@ -1,6 +1,7 @@
 package com.specure.manager.presentation.screens.manager_overview
 
 import android.Manifest
+import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.media.Ringtone
 import android.media.RingtoneManager
@@ -13,6 +14,8 @@ import androidx.lifecycle.viewModelScope
 import com.specure.core.domain.config.Config
 import com.specure.core.domain.service.BluetoothService
 import com.specure.core.presentation.ui.UiText
+import com.specure.intercom.data.client.mappers.toTrackingDevice
+import com.specure.intercom.domain.BluetoothDevicesProvider
 import com.specure.intercom.domain.client.BluetoothClientService
 import com.specure.intercom.domain.client.DeviceType
 import com.specure.intercom.domain.message.TrackerAction
@@ -36,6 +39,7 @@ class ManagerOverviewViewModel(
     private val appConfig: Config,
     private val applicationScope: CoroutineScope,
     private val bluetoothService: BluetoothClientService,
+    private val bluetoothDevicesProvider: BluetoothDevicesProvider<BluetoothDevice>,
     private val androidBluetoothService: BluetoothService,
     private val permissionHandler: PermissionHandler,
     private val updater: Updater,
@@ -67,7 +71,7 @@ class ManagerOverviewViewModel(
 
         checkTrackerLatestVersion()
 
-        manageBluetoothDevices()
+//        manageBluetoothDevices()
     }
 
     private fun playAlertSound() {
@@ -80,17 +84,33 @@ class ManagerOverviewViewModel(
 
     private fun manageBluetoothDevices() {
         if (permissionHandler.isPermissionGranted(Manifest.permission.BLUETOOTH_CONNECT) && state.isBluetoothAdapterEnabled) {
-            bluetoothService.observeConnectedDevices(DeviceType.TRACKER)
+            bluetoothDevicesProvider.observeConnectedDevices(DeviceType.TRACKER)
                 .onEach { devices ->
+                    Timber.d("getting devices observer: ${devices.values}")
                     state = state.copy(
-                        managedDevices = devices.values.toList()
+                        managedDevices = devices.values.mapNotNull {
+                            it.toTrackingDevice()
+                        }.toList()
                     )
                 }
                 .launchIn(viewModelScope)
 
-            bluetoothService.trackingDevices
-                .onEach { devices ->
+//            bluetoothDevicesProvider.pairedDevices
+//                .onEach { devices ->
+//                    Timber.d("getting devices paired devices: ${devices.values}")
+//                    state = state.copy(
+//                        managedDevices = devices.values.mapNotNull {
+//                            it.toTrackingDevice()
+//                        }.toList()
+//                    )
+//                }
+//                .launchIn(viewModelScope)
+//
+//            bluetoothDevicesProvider.getPairedDevices()
 
+            /*bluetoothService.trackingDevices
+                .onEach { devices ->
+                    Timber.d("getting devices tracking devices: ${devices.values}")
                     val previousState = state.copy()
                     val newErrorDevices = previousState.managedDevices.filter { prevDeviceState ->
                         devices.filter { currentDeviceState ->
@@ -116,7 +136,7 @@ class ManagerOverviewViewModel(
                         managedDevices = updateCheckDevices.toList()
                     )
                 }
-                .launchIn(viewModelScope)
+                .launchIn(viewModelScope)*/
         }
     }
 
@@ -194,5 +214,9 @@ class ManagerOverviewViewModel(
         state = state.copy(
             isBluetoothAdapterEnabled = androidBluetoothService.isBluetoothEnabled(),
         )
+    }
+
+    private fun startDiscoveringDevices() {
+//        bluetoothService.startDeviceDiscovery()
     }
 }
