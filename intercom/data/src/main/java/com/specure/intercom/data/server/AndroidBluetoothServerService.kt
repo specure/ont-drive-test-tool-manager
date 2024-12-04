@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.content.Context
+import com.specure.core.domain.package_info.PackageInfoProvider
+import com.specure.intercom.data.util.isBluetoothConnectPermissionGranted
 import com.specure.intercom.domain.ManagerControlServiceProtocol
 import com.specure.intercom.domain.data.MeasurementProgress
 import com.specure.intercom.domain.data.MeasurementState
@@ -27,6 +29,7 @@ import java.util.UUID
 class AndroidBluetoothServerService(
     private val context: Context,
     private val messageProcessor: MessageProcessor,
+    private val packageInfoProvider: PackageInfoProvider
 ) : BluetoothServerService {
 
     private val serviceUUID: UUID = ManagerControlServiceProtocol.customServiceUUID
@@ -48,17 +51,17 @@ class AndroidBluetoothServerService(
     private val _receivedActionFlow = MutableSharedFlow<TrackerAction?>()
     override val receivedActionFlow: SharedFlow<TrackerAction?> get() = _receivedActionFlow
 
-    override fun setMeasurementProgressCallback(statusUpdate: () -> MeasurementProgress?) {
+    fun setMeasurementProgressCallback(statusUpdate: () -> MeasurementProgress?) {
         this.getStatusUpdate = statusUpdate
     }
 
-    override fun startGattServer() {
+    override fun startServer() {
         val bluetoothManager =
             context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
 
         // Ensure Bluetooth is supported and enabled on the device
-        if (bluetoothAdapter == null || bluetoothAdapter?.isEnabled != true) {
+        if (!context.isBluetoothConnectPermissionGranted() || bluetoothAdapter == null || bluetoothAdapter?.isEnabled != true) {
             // Bluetooth is not supported or not enabled
             return
         }
@@ -89,6 +92,7 @@ class AndroidBluetoothServerService(
                         }
                     } catch (e: IOException) {
                         Timber.e("Socket's accept() method failed", e)
+                        Thread.sleep(1000L)
                         shouldLoop = true // todo change to false
                     }
                 }
@@ -168,7 +172,7 @@ class AndroidBluetoothServerService(
         }
     }
 
-    override fun stopGattServer() {
+    override fun stopServer() {
         try {
             bluetoothSocket?.close()
         } catch (e: IOException) {

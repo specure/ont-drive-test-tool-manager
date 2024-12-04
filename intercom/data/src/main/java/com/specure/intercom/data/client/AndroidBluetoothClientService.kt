@@ -1,24 +1,16 @@
 package com.specure.intercom.data.client
 
-import android.Manifest
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.specure.core.domain.util.Result
-import com.specure.intercom.data.client.mappers.toDeviceNode
 import com.specure.intercom.data.client.mappers.toTrackingDevice
+import com.specure.intercom.data.util.isBluetoothConnectPermissionGranted
+import com.specure.intercom.data.util.isFineLocationPermissionGranted
+import com.specure.intercom.domain.BluetoothDevicesProvider
 import com.specure.intercom.domain.ManagerControlServiceProtocol
 import com.specure.intercom.domain.client.BluetoothClientService
 import com.specure.intercom.domain.client.BluetoothError
-import com.specure.intercom.domain.client.DeviceNode
 import com.specure.intercom.domain.client.DeviceType
 import com.specure.intercom.domain.client.TrackingDevice
 import com.specure.intercom.domain.data.MeasurementState
@@ -28,24 +20,21 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.ProducerScope
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import java.io.IOException
 import java.io.OutputStream
-import java.util.stream.Collectors
 
 class AndroidBluetoothClientService(
     private val context: Context,
+    private val devicesProvider: BluetoothDevicesProvider<BluetoothDevice>,
     private val applicationScope: CoroutineScope,
     private val messageProcessor: MessageProcessor,
 ) : BluetoothClientService {
@@ -70,9 +59,18 @@ class AndroidBluetoothClientService(
     private var _outputStream = MutableStateFlow<Map<String, OutputStream>>(mapOf())
     val outputStream = _outputStream.asStateFlow()
 
-    private var bluetoothAdapter: BluetoothAdapter? = null
-
     init {
+        devicesProvider.observeConnectedDevices(DeviceType.TRACKER).onEach { devices ->
+            val trackDevices = devices.values
+                .mapNotNull {
+                    it.toTrackingDevice()
+                }
+                .associateBy { it.address }
+                .toMap()
+
+            trackingDevices.emit(trackDevices)
+        }.launchIn(applicationScope + Dispatchers.IO)
+
         sendActionFlow.onEach { action ->
             val actionDeviceAddress = when (action) {
                 is TrackerAction.StartTest -> action.address
@@ -123,115 +121,19 @@ class AndroidBluetoothClientService(
                             }
                         }
                     }
-
                 }
-
             }
         }.launchIn(applicationScope)
     }
 
-    override fun observeConnectedDevices(localDeviceType: DeviceType): Flow<Map<String, TrackingDevice>> {
-        return callbackFlow {
-
-            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-            if (bluetoothAdapter == null) {
-                // Device doesn't support Bluetooth
-                Timber.e("Device doesn't support Bluetooth")
-                send(mapOf())
-                return@callbackFlow
-            }
-
-            if (bluetoothAdapter?.isEnabled != true) {
-                // Bluetooth is not enabled
-                Timber.d("Bluetooth is not enabled")
-                // You can request user to enable Bluetooth here
-                send(mapOf())
-                return@callbackFlow
-            }
-
-            bluetoothAdapter?.let {
-                if (getPairedDevicesEndedWithError(it)) return@callbackFlow
-            }
-
-            // BroadcastReceiver for changes in bonded state
-            val bondStateReceiver = object : BroadcastReceiver() {
-                override fun onReceive(context: Context, intent: Intent) {
-                    val action = intent.action
-
-                    val pairedDevices = bluetoothAdapter?.let {
-                        getPairedDevices(it)
-                    }
-                    Timber.d("Updating paired devices: $pairedDevices")
-
-                    val pairedNodes: HashMap<String, TrackingDevice> = pairedDevices?.mapNotNull {
-                        it.toTrackingDevice()
-                    }
-                    ?.associateBy { it.address }
-                    ?.toMap( HashMap()) ?: (HashMap())
-                    trySend(pairedNodes)
-                    trackingDevices.tryEmit(pairedNodes)
-
-                    if (action == BluetoothDevice.ACTION_BOND_STATE_CHANGED) {
-                        val device =
-                            intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                    }
-                }
-            }
-
-            val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
-            context.registerReceiver(bondStateReceiver, filter)
-
-            awaitClose {
-                context.unregisterReceiver(bondStateReceiver)
-                Timber.d("Unregistered bluetooth change receiver")
-            }
-        }
-    }
-
-    private suspend fun ProducerScope<Map<String, TrackingDevice>>.getPairedDevicesEndedWithError(
-        bluetoothAdapter: BluetoothAdapter
-    ): Boolean {
-        try {
-            val pairedDevices: Set<BluetoothDevice> = getPairedDevices(bluetoothAdapter)
-            Timber.d("Obtaining paired devices ${pairedDevices}")
-            val pairedNodes: HashMap<String, TrackingDevice> =
-                pairedDevices
-                    .mapNotNull { it.toTrackingDevice() }
-                    .associateBy { it.address }
-                    .toMap(HashMap())
-            trySend(pairedNodes)
-            trackingDevices.emit(pairedNodes)
-        } catch (e: SecurityException) {
-            awaitClose()
-            return true
-        }
-        return false
-    }
-
-    private fun getPairedDevices(bluetoothAdapter: BluetoothAdapter): Set<BluetoothDevice> {
-        val pairedDevices: Set<BluetoothDevice> = if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            setOf()
-        } else {
-            bluetoothAdapter.bondedDevices
-        }
-        applicationScope.launch {
-            _pairedDevices.emit(pairedDevices)
-        }
-        return pairedDevices
-    }
-
     override suspend fun connectToDevice(deviceAddress: String): Result<Boolean, BluetoothError> {
         // Ensure the location permission is granted (required for Bluetooth discovery from Android M+)
-        if (isFineLocationPermissionGranted()) return Result.Error(BluetoothError.NO_FINE_LOCATION_PERMISSIONS)
-        if (!isBluetoothConnectPermissionGranted()) {
+        if (!context.isFineLocationPermissionGranted()) return Result.Error(BluetoothError.NO_FINE_LOCATION_PERMISSIONS)
+        if (!context.isBluetoothConnectPermissionGranted()) {
             return Result.Error(BluetoothError.MISSING_BLUETOOTH_CONNECT_PERMISSION)
         }
 
-        val bluetoothDevice = getBluetoothDeviceFromDeviceAddress(deviceAddress)
+        val bluetoothDevice = devicesProvider.getNativeBluetoothDeviceFromDeviceAddress(deviceAddress)
             ?: return Result.Error(BluetoothError.BLUETOOTH_DEVICE_NOT_FOUND)
 
         // Use CompletableDeferred to wait for the result
@@ -298,10 +200,10 @@ class AndroidBluetoothClientService(
         connectedDevice?.let {
             val tmpTrackingDevices = trackingDevices.value.toMutableMap()
             tmpTrackingDevices[socket.remoteDevice.address] = it
-                // Coroutine for receiving data
-                CoroutineScope(Dispatchers.IO).launch {
-                    trackingDevices.emit(tmpTrackingDevices)
-                }
+            // Coroutine for receiving data
+            CoroutineScope(Dispatchers.IO).launch {
+                trackingDevices.emit(tmpTrackingDevices)
+            }
         }
 
         // Launch a coroutine for receiving data
@@ -404,34 +306,6 @@ class AndroidBluetoothClientService(
             CoroutineScope(Dispatchers.IO).launch {
                 trackingDevices.emit(tmpTrackingDevices)
             }
-        }
-    }
-
-    private fun isFineLocationPermissionGranted(): Boolean {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
-    }
-
-
-    private fun isBluetoothConnectPermissionGranted() =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) == PackageManager.PERMISSION_GRANTED
-        } else {
-            true
-        }
-
-    private fun getBluetoothDeviceFromDeviceAddress(deviceAddress: String): BluetoothDevice? {
-        return try {
-            _pairedDevices.value.first { it.address == deviceAddress }
-        } catch (e: NoSuchElementException) {
-            e.printStackTrace()
-            null
         }
     }
 }

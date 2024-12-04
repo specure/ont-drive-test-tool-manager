@@ -84,31 +84,8 @@ class ManagerOverviewViewModel(
 
     private fun manageBluetoothDevices() {
         if (permissionHandler.isPermissionGranted(Manifest.permission.BLUETOOTH_CONNECT) && state.isBluetoothAdapterEnabled) {
-            bluetoothDevicesProvider.observeConnectedDevices(DeviceType.TRACKER)
-                .onEach { devices ->
-                    Timber.d("getting devices observer: ${devices.values}")
-                    state = state.copy(
-                        managedDevices = devices.values.mapNotNull {
-                            it.toTrackingDevice()
-                        }.toList()
-                    )
-                }
-                .launchIn(viewModelScope)
 
-//            bluetoothDevicesProvider.pairedDevices
-//                .onEach { devices ->
-//                    Timber.d("getting devices paired devices: ${devices.values}")
-//                    state = state.copy(
-//                        managedDevices = devices.values.mapNotNull {
-//                            it.toTrackingDevice()
-//                        }.toList()
-//                    )
-//                }
-//                .launchIn(viewModelScope)
-//
-//            bluetoothDevicesProvider.getPairedDevices()
-
-            /*bluetoothService.trackingDevices
+            bluetoothService.trackingDevices
                 .onEach { devices ->
                     Timber.d("getting devices tracking devices: ${devices.values}")
                     val previousState = state.copy()
@@ -136,7 +113,7 @@ class ManagerOverviewViewModel(
                         managedDevices = updateCheckDevices.toList()
                     )
                 }
-                .launchIn(viewModelScope)*/
+                .launchIn(viewModelScope)
         }
     }
 

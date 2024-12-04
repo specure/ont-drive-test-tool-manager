@@ -68,6 +68,7 @@ projectTargetSdkVersion = "35"
 projectCompileSdkVersion = "35"
 projectVersionCode = "6"
 featureDeliveryKtx = "2.1.0"
+coreVersion = "1.15.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -153,6 +154,7 @@ kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-pl
 ksp-gradlePlugin = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
 room-gradlePlugin = { group = "androidx.room", name = "room-gradle-plugin", version.ref = "room" }
 feature-delivery-ktx = { group = "com.google.android.play", name = "feature-delivery-ktx", version.ref = "featureDeliveryKtx" }
+androidx-core = { group = "androidx.core", name = "core", version.ref = "coreVersion" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

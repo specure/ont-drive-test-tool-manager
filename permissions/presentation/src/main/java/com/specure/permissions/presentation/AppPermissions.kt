@@ -14,6 +14,13 @@ val appPermissions = linkedMapOf<String, Permission>(
         )
     ),
     Pair(
+        Manifest.permission.BLUETOOTH_SCAN,
+        AndroidPermission(
+            name = Manifest.permission.BLUETOOTH_SCAN,
+            minimumApiRequired = Build.VERSION_CODES.S
+        )
+    ),
+    Pair(
         Manifest.permission.ACCESS_FINE_LOCATION,
         AndroidPermission(
             name = Manifest.permission.ACCESS_FINE_LOCATION,

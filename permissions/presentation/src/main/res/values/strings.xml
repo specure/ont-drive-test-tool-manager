@@ -23,5 +23,8 @@
     <string name="test_up">Test Up</string>
     <string name="bluetooth_connect_permission">Connect bluetooth</string>
     <string name="permission_bluetooth_connect_rationale">It seems you permanently declined bluetooth connect permission. You can go to app settings to grant it</string>
-    <string name="permission_bluetooth_connect_description">We need bluetooth connect permission to connect to managing app, where you can remotely control tracking app and see its status.</string>
+    <string name="permission_bluetooth_connect_description">We need bluetooth connect permission to connect to managed app, where you can remotely control tracking app and see its status.</string>
+    <string name="bluetooth_scan_permission">Scan bluetooth</string>
+    <string name="permission_bluetooth_scan_rationale">It seems you permanently declined bluetooth scan permission. You can go to app settings to grant it</string>
+    <string name="permission_bluetooth_scan_description">We need bluetooth scan permission to search for app to be managed, so you can remotely control tracking app and see its status.</string>
 </resources>

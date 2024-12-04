@@ -61,6 +61,10 @@ class AndroidBluetoothDevicesProvider(
             } else {
                 setOf()
             }
+        coroutineScope.launch {
+            val nativeDevices = pairedDevices.associateBy { it.address  }.toMap()
+            _nativePairedDevices.emit(nativeDevices)
+        }
         return pairedDevices
     }
 
