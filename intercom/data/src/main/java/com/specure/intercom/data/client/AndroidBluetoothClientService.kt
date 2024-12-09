@@ -73,9 +73,7 @@ class AndroidBluetoothClientService(
 //        }
         .launchIn(applicationScope + Dispatchers.IO)
 
-        devicesProvider.startDiscovery()
-
-        devicesProvider.nearbyPairedDevices.onEach { devices ->
+        devicesProvider.pairedDevices.onEach { devices ->
             val trackDevices = devices.values
                 .mapNotNull {
                     it.toTrackingDevice()

@@ -9,11 +9,11 @@ interface BluetoothDevicesProvider<T> {
 
     val pairedDevices: StateFlow<Map<String, BluetoothDevice>>
 
-//    val nearbyPairedDevices: StateFlow<Map<String, BluetoothDevice>>
+    val nearbyUnpairedDevices: StateFlow<Map<String, BluetoothDevice>>
 
     val nativePairedDevices: StateFlow<Map<String, T>>
 
-//    val nativeNearbyPairedDevices: StateFlow<Map<String, T>>
+    val nativeNearbyUnpairedDevices: StateFlow<Map<String, T>>
 
     fun getPairedDevices(): Map<String, BluetoothDevice>
 
@@ -21,6 +21,6 @@ interface BluetoothDevicesProvider<T> {
 
     fun observeConnectedDevices(localDeviceType: DeviceType): Flow<Map<String, BluetoothDevice>>
 
-//    fun startDiscovery()
+    fun startDiscovery()
 
 }
