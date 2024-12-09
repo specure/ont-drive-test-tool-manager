@@ -37,12 +37,14 @@ import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
+import com.specure.core.presentation.designsystem.DevicesIcon
 import com.specure.core.presentation.designsystem.InfoIcon
 import com.specure.core.presentation.designsystem.SettingsIcon
 import com.specure.core.presentation.designsystem.SignalTrackerManagerTheme
 import com.specure.core.presentation.designsystem.components.SignalTrackerManagerOutlinedActionButton
 import com.specure.core.presentation.designsystem.components.SignalTrackerManagerScaffold
 import com.specure.core.presentation.designsystem.components.SignalTrackerManagerToolbar
+import com.specure.core.presentation.designsystem.components.util.BaseToolbarItem
 import com.specure.core.presentation.designsystem.components.util.DropDownItem
 import com.specure.core.presentation.ui.KeepScreenOn
 import com.specure.manager.presentation.R
@@ -112,21 +114,34 @@ private fun ManagerOverviewScreen(
                 title = stringResource(id = R.string.signal_tracker_manager),
                 scrollBehavior = scrollBehavior,
                 menuItems = listOf(
-                    DropDownItem(
-                        icon = SettingsIcon,
-                        title = stringResource(id = R.string.settings)
+                    BaseToolbarItem(
+                        item = DropDownItem(
+                            icon = DevicesIcon,
+                            title = stringResource(id = R.string.devices)
+                        ),
+                        action = {
+                            onAction(ManagerOverviewAction.OnDevicesClick)
+                        }
                     ),
-                    DropDownItem(
-                        icon = InfoIcon,
-                        title = stringResource(id = R.string.about)
+                    BaseToolbarItem(
+                        item = DropDownItem(
+                            icon = SettingsIcon,
+                            title = stringResource(id = R.string.settings)
+                        ),
+                        action = {
+                            onAction(ManagerOverviewAction.OnSettingsClick)
+                        }
+                    ),
+                    BaseToolbarItem(
+                        item = DropDownItem(
+                            icon = InfoIcon,
+                            title = stringResource(id = R.string.about)
+                        ),
+                        action = {
+                            onAction(ManagerOverviewAction.OnAboutClick)
+                        }
                     ),
                 ),
-                onMenuItemClick = { index ->
-                    when (index) {
-                        0 -> onAction(ManagerOverviewAction.OnSettingsClick)
-                        1 -> onAction(ManagerOverviewAction.OnAboutClick)
-                    }
-                },
             )
         },
     ) { padding ->

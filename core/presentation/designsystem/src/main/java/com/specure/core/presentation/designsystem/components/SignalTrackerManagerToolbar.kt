@@ -40,6 +40,7 @@ import com.specure.core.presentation.designsystem.Poppins
 import com.specure.core.presentation.designsystem.R
 import com.specure.core.presentation.designsystem.SignalTrackerManagerBlue
 import com.specure.core.presentation.designsystem.SignalTrackerManagerTheme
+import com.specure.core.presentation.designsystem.components.util.BaseToolbarItem
 import com.specure.core.presentation.designsystem.components.util.DropDownItem
 
 @Composable
@@ -47,8 +48,7 @@ fun SignalTrackerManagerToolbar(
     showBackButton: Boolean,
     title: String,
     modifier: Modifier = Modifier,
-    menuItems: List<DropDownItem> = emptyList(),
-    onMenuItemClick: (Int) -> Unit = {},
+    menuItems: List<BaseToolbarItem> = emptyList(),
     onBackClick: () -> Unit = {},
     scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
     startContent: @Composable () -> Unit = {}
@@ -101,17 +101,17 @@ fun SignalTrackerManagerToolbar(
                                 modifier = Modifier
                                     .clickable {
                                         isDropDownOpen = false
-                                        onMenuItemClick(index)
+                                        dropDownItem.action()
                                     }
                                     .fillMaxWidth()
                                     .padding(16.dp)
                             ) {
                                 Icon(
-                                    imageVector = dropDownItem.icon,
-                                    contentDescription = dropDownItem.title
+                                    imageVector = dropDownItem.item.icon,
+                                    contentDescription = dropDownItem.item.title
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(text = dropDownItem.title)
+                                Text(text = dropDownItem.item.title)
                             }
                         }
                     }
@@ -145,10 +145,13 @@ fun SignalTrackerManagerToolbarPreview() {
                 )
             },
             menuItems = listOf(
-                DropDownItem(
-                    icon = AnalyticsIcon,
-                    title = "Analytics"
+                BaseToolbarItem(
+                    item = DropDownItem(
+                        icon = AnalyticsIcon,
+                        title = "Analytics"
+                    )
                 )
+
             )
         )
     }

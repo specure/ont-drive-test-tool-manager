@@ -38,4 +38,5 @@
     <string name="latest_tracker_version">Latest tracker version:</string>
     <string name="recheck">Recheck</string>
     <string name="keep_manager_screen_on">Keep screen with managed devices on</string>
+    <string name="devices">Devices</string>
 </resources>
