@@ -36,6 +36,19 @@ fun BluetoothDevice.toTrackingDevice(): TrackingDevice? {
     }
 }
 
+fun BluetoothDevice.toBluetoothDevice(): com.specure.intercom.domain.data.BluetoothDevice? {
+    return try {
+        com.specure.intercom.domain.data.BluetoothDevice(
+            name = this.name,
+            address = this.address,
+        )
+    } catch (e: SecurityException) {
+        e.printStackTrace()
+        Timber.e(e.message)
+        null
+    }
+}
+
 fun com.specure.intercom.domain.data.BluetoothDevice.toTrackingDevice(): TrackingDevice? {
     return try {
         TrackingDevice(

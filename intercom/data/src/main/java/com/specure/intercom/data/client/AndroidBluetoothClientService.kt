@@ -60,7 +60,22 @@ class AndroidBluetoothClientService(
     val outputStream = _outputStream.asStateFlow()
 
     init {
-        devicesProvider.observeConnectedDevices(DeviceType.TRACKER).onEach { devices ->
+        devicesProvider.observeConnectedDevices(DeviceType.TRACKER)
+//        .onEach { devices ->
+//            val trackDevices = devices.values
+//                .mapNotNull {
+//                    it.toTrackingDevice()
+//                }
+//                .associateBy { it.address }
+//                .toMap()
+//
+//            trackingDevices.emit(trackDevices)
+//        }
+        .launchIn(applicationScope + Dispatchers.IO)
+
+        devicesProvider.startDiscovery()
+
+        devicesProvider.nearbyPairedDevices.onEach { devices ->
             val trackDevices = devices.values
                 .mapNotNull {
                     it.toTrackingDevice()

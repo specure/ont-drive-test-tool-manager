@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import com.specure.intercom.data.client.mappers.toBluetoothDevice
 import com.specure.intercom.data.util.isBluetoothConnectPermissionGranted
 import com.specure.intercom.domain.BluetoothDevicesProvider
 import com.specure.intercom.domain.client.DeviceType
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -28,17 +30,20 @@ class AndroidBluetoothDevicesProvider(
     private var _nativePairedDevices = MutableStateFlow<Map<String, android.bluetooth.BluetoothDevice>>(emptyMap())
     override val nativePairedDevices = _nativePairedDevices.asStateFlow()
 
+//    private var _nativeNearbyPairedDevices = MutableStateFlow<Map<String, android.bluetooth.BluetoothDevice>>(emptyMap())
+//    override val nativeNearbyPairedDevices = _nativeNearbyPairedDevices.asStateFlow()
+
     private var _pairedDevices = MutableStateFlow<Map<String, BluetoothDevice>>(emptyMap())
     override val pairedDevices = _pairedDevices.asStateFlow()
+
+//    private var _nearbyPairedDevices = MutableStateFlow<Map<String, BluetoothDevice>>(emptyMap())
+//    override val nearbyPairedDevices = _pairedDevices.asStateFlow()
 
     override fun getPairedDevices(): Map<String, BluetoothDevice> {
         val pairedBluetoothDevices = if (context.isBluetoothConnectPermissionGranted()) {
             getAndroidPairedDevices()
-                .map { nativeDevice ->
-                    BluetoothDevice(
-                        nativeDevice.name,
-                        nativeDevice.address
-                    )
+                .mapNotNull { nativeDevice ->
+                    nativeDevice.toBluetoothDevice()
                 }
                 .associateBy { device ->
                     device.address
@@ -115,6 +120,58 @@ class AndroidBluetoothDevicesProvider(
             }
         }
     }
+
+//    private val discoveryReceiver = object : BroadcastReceiver() {
+//        override fun onReceive(context: Context, intent: Intent) {
+//            when (intent.action) {
+//                android.bluetooth.BluetoothDevice.ACTION_FOUND -> {
+//                    val device: android.bluetooth.BluetoothDevice? = intent.getParcelableExtra(android.bluetooth.BluetoothDevice.EXTRA_DEVICE)
+//                    device?.let {
+//                        // Process each discovered device
+//                        Timber.d("Found device: ${it.name} - ${it.address}")
+//                        if (nativePairedDevices.value.containsKey(it.address)) {
+//                            _nativeNearbyPairedDevices.update { currentMap ->
+//                                currentMap + (it.address to it)
+//                            }
+//                            val bluetoothDevice = it.toBluetoothDevice()
+//                            bluetoothDevice?.let {
+//                                _nearbyPairedDevices.update { currentMap ->
+//                                    currentMap + (it.address to it)
+//                                }
+//                            }
+//                            Timber.d("Paired device in range: ${it.name} - ${it.address}")
+//                        }
+//                    }
+//                }
+//                BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
+//                    // Discovery is complete
+//                    Timber.d("Discovery finished.")
+//                    context.unregisterReceiver(this)
+//                }
+//            }
+//        }
+//    }
+//
+//    override fun startDiscovery() {
+//        coroutineScope.launch {
+//            _nativeNearbyPairedDevices.emit(mapOf())
+//            _nearbyPairedDevices.emit(mapOf())
+//        }
+//
+//        if (bluetoothAdapter.isDiscovering) {
+//            bluetoothAdapter.cancelDiscovery()
+//        }
+//
+//        // Register the BroadcastReceiver for discovery results
+//        val filter = IntentFilter().apply {
+//            addAction( android.bluetooth.BluetoothDevice.ACTION_FOUND)
+//            addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+//        }
+//        context.registerReceiver(discoveryReceiver, filter)
+//
+//        // Start discovery
+//        bluetoothAdapter.startDiscovery()
+//    }
 
     private suspend fun ProducerScope<Map<String, BluetoothDevice>>.getPairedDevicesEndedWithError(): Boolean {
         try {
