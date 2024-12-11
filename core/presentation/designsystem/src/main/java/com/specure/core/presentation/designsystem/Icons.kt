@@ -88,6 +88,10 @@ val PersonIcon: ImageVector
     @Composable
     get() = ImageVector.vectorResource(id = R.drawable.person)
 
+val RefreshIcon: ImageVector
+    @Composable
+    get() = ImageVector.vectorResource(id = R.drawable.refresh)
+
 val RunOutlinedIcon: ImageVector
     @Composable
     get() = ImageVector.vectorResource(id = R.drawable.run_outlined)

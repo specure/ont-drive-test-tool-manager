@@ -18,4 +18,8 @@ interface Config {
     fun setKeepScreenOnEnabled(enabled: Boolean)
 
     fun getKeepScreenOnEnabledDefault(): Boolean
+
+    fun setSelectedDevicesAddresses(deviceAddresses: List<String>)
+
+    fun getSelectedDevicesAddress(): List<String>
 }

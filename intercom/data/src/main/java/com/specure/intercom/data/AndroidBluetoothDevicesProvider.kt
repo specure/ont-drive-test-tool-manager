@@ -73,7 +73,7 @@ class AndroidBluetoothDevicesProvider(
         return pairedDevices
     }
 
-    override fun observeConnectedDevices(localDeviceType: DeviceType): Flow<Map<String, BluetoothDevice>> {
+    override fun observePairedDevices(localDeviceType: DeviceType): Flow<Map<String, BluetoothDevice>> {
         return callbackFlow {
 
             if (!bluetoothAdapter.isEnabled) {

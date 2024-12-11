@@ -39,4 +39,7 @@
     <string name="recheck">Recheck</string>
     <string name="keep_manager_screen_on">Keep screen with managed devices on</string>
     <string name="devices">Devices</string>
+    <string name="paired_devices">Paired devices</string>
+    <string name="refresh">Refresh</string>
+    <string name="please_pair_tracking_device">Please pair a tracking device via bluetooth</string>
 </resources>

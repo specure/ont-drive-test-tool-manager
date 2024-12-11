@@ -9,6 +9,7 @@ import com.specure.intercom.data.di.DI_BLUETOOTH_CLIENT_SERVICE_BLE
 import com.specure.intercom.data.di.DI_BLUETOOTH_CLIENT_SERVICE_CLASSIC
 import com.specure.intercom.domain.client.BluetoothClientService
 import com.specure.manager.presentation.about.AboutScreenViewModel
+import com.specure.manager.presentation.screens.devices.DevicesViewModel
 import com.specure.manager.presentation.screens.manager_overview.ManagerOverviewViewModel
 import com.specure.manager.presentation.screens.settings.SettingsScreenViewModel
 import org.koin.android.ext.koin.androidApplication
@@ -36,6 +37,7 @@ val managerPresentationModule = module {
         )
     }
     viewModelOf(::AboutScreenViewModel)
+    viewModelOf(::DevicesViewModel)
     viewModelOf(::SettingsScreenViewModel)
 
     single<SharedPreferences> {

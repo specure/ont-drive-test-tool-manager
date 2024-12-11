@@ -9,6 +9,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.specure.manager.presentation.about.AboutScreenNav
 import com.specure.manager.presentation.about.AboutScreenRoot
+import com.specure.manager.presentation.screens.devices.DevicesScreenRoot
+import com.specure.manager.presentation.screens.devices.navigation.DevicesScreenNav
 import com.specure.manager.presentation.screens.manager_overview.ManagerOverviewScreenRoot
 import com.specure.manager.presentation.screens.settings.SettingsScreenRoot
 import com.specure.manager.presentation.screens.settings.navigation.SettingsScreenNav
@@ -49,6 +51,16 @@ private fun NavGraphBuilder.mainGraph(
                 },
                 onAboutClick = {
                     navController.navigate(AboutScreenNav)
+                },
+                onDeviceClick = {
+                    navController.navigate(DevicesScreenNav)
+                }
+            )
+        }
+        composable<DevicesScreenNav> {
+            DevicesScreenRoot(
+                onBackClick = {
+                    navController.navigateUp()
                 },
             )
         }

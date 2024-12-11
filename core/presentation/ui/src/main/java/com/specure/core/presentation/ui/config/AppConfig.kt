@@ -41,4 +41,12 @@ class AppConfig(
     override fun getKeepScreenOnEnabledDefault(): Boolean {
         return KEEP_SCREEN_ON_ENABLED_BY_DEFAULT
     }
+
+    override fun setSelectedDevicesAddresses(deviceAddresses: List<String>) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getSelectedDevicesAddress(): List<String> {
+        TODO("Not yet implemented")
+    }
 }

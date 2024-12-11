@@ -19,7 +19,7 @@ interface BluetoothDevicesProvider<T> {
 
     fun getNativeBluetoothDeviceFromDeviceAddress(deviceAddress: String): T?
 
-    fun observeConnectedDevices(localDeviceType: DeviceType): Flow<Map<String, BluetoothDevice>>
+    fun observePairedDevices(localDeviceType: DeviceType): Flow<Map<String, BluetoothDevice>>
 
     fun startDiscovery()
 
