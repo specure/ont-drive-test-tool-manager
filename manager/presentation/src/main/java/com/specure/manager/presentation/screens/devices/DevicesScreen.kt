@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,35 +17,24 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
-import com.specure.core.presentation.designsystem.DevicesIcon
-import com.specure.core.presentation.designsystem.InfoIcon
 import com.specure.core.presentation.designsystem.RefreshIcon
-import com.specure.core.presentation.designsystem.SettingsIcon
 import com.specure.core.presentation.designsystem.SignalTrackerManagerTheme
-import com.specure.core.presentation.designsystem.components.SignalTrackerManagerOutlinedActionButton
 import com.specure.core.presentation.designsystem.components.SignalTrackerManagerScaffold
 import com.specure.core.presentation.designsystem.components.SignalTrackerManagerToolbar
 import com.specure.core.presentation.designsystem.components.util.BaseToolbarItem
 import com.specure.core.presentation.designsystem.components.util.DropDownItem
-import com.specure.core.presentation.ui.KeepScreenOn
 import com.specure.manager.presentation.R
 import com.specure.manager.presentation.screens.devices.components.PairedDeviceListItem
-import com.specure.manager.presentation.screens.manager_overview.components.ManagedDeviceListItem
-import com.specure.updater.domain.UpdatingStatus
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
