@@ -14,10 +14,8 @@ import androidx.lifecycle.viewModelScope
 import com.specure.core.domain.config.Config
 import com.specure.core.domain.service.BluetoothService
 import com.specure.core.presentation.ui.UiText
-import com.specure.intercom.data.client.mappers.toTrackingDevice
 import com.specure.intercom.domain.BluetoothDevicesProvider
 import com.specure.intercom.domain.client.BluetoothClientService
-import com.specure.intercom.domain.client.DeviceType
 import com.specure.intercom.domain.message.TrackerAction
 import com.specure.manager.presentation.BuildConfig
 import com.specure.manager.presentation.R
@@ -88,16 +86,20 @@ class ManagerOverviewViewModel(
             bluetoothService.trackingDevices
                 .onEach { devices ->
                     Timber.d("getting devices tracking devices: ${devices.values}")
+                    val selectedDevicesAddresses = appConfig.getSelectedDevicesAddress()
+                    val managedDevices = devices.filter { device ->
+                        selectedDevicesAddresses.contains(device.value.address)
+                    }
                     val previousState = state.copy()
                     val newErrorDevices = previousState.managedDevices.filter { prevDeviceState ->
-                        devices.filter { currentDeviceState ->
+                        managedDevices.filter { currentDeviceState ->
                             currentDeviceState.value.isStateChangedOnTheSameDevice(prevDeviceState) && (currentDeviceState.value.isErrorState() || currentDeviceState.value.isSpeedTestErrorState())
                         }.isNotEmpty()
                     }
                     if (newErrorDevices.isNotEmpty()) {
                         playAlertSound()
                     }
-                    val updateCheckDevices = devices.values.map { device ->
+                    val updateCheckDevices = managedDevices.values.map { device ->
                         val latestVersion = updater.getLatestVersion(device.deviceAppVersion, state.lastTrackerVersion)
                         if (latestVersion != null && device.deviceAppVersion != latestVersion) {
                             device.copy(
@@ -193,7 +195,4 @@ class ManagerOverviewViewModel(
         )
     }
 
-    private fun startDiscoveringDevices() {
-//        bluetoothService.startDeviceDiscovery()
-    }
 }

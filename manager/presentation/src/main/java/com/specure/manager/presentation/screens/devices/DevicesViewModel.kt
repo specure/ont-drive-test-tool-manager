@@ -15,6 +15,7 @@ import com.specure.manager.presentation.screens.devices.mappers.toBluetoothDevic
 import com.specure.permissions.domain.PermissionHandler
 import com.specure.permissions.presentation.appPermissions
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import timber.log.Timber
@@ -40,25 +41,39 @@ class DevicesViewModel(
     private fun manageBluetoothDevices() {
         if (permissionHandler.isPermissionGranted(Manifest.permission.BLUETOOTH_CONNECT)) {
 
-            bluetoothDevicesProvider.observePairedDevices(DeviceType.TRACKER)
-                .onEach { devices ->
-                    Timber.d("getting devices tracking devices: ${devices.values}")
+            val pairedDevicesFlow = bluetoothDevicesProvider.observePairedDevices(DeviceType.TRACKER)
+
+            pairedDevicesFlow.onEach { pairedDevices ->
+                val selectedDevicesAddresses = appConfig.getSelectedDevicesAddress()
+
+                Timber.d("getting pairedDevices tracking pairedDevices ALONE: ${pairedDevices.values}")
+                state = state.copy(
+                    pairedDevices = pairedDevices.values.map { it.toBluetoothDeviceUi(selectedDevicesAddresses.contains(it.address)) }.toList()
+                )
+            }.launchIn(viewModelScope)
+
+            val appConfigChangesFlow = appConfig.listenToPreferencesChanges()
+            appConfigChangesFlow.combineTransform(pairedDevicesFlow) { _, pairedDevices ->
+                    val selectedDevicesAddresses = appConfig.getSelectedDevicesAddress()
+
+                    Timber.d("getting pairedDevices tracking pairedDevices: ${pairedDevices.values}")
                     state = state.copy(
-                        pairedDevices = devices.values.map { it.toBluetoothDeviceUi() }.toList()
+                        pairedDevices = pairedDevices.values.map { it.toBluetoothDeviceUi(selectedDevicesAddresses.contains(it.address)) }.toList()
                     )
-                }
-                .launchIn(viewModelScope)
+                    emit(state)
+
+            }.launchIn(viewModelScope)
+
         }
     }
 
     fun onAction(action: DevicesAction) {
         when (action) {
             is DevicesAction.OnDeviceAdded -> {
-                action.address
+                appConfig.setSelectedDevicesAddresses(appConfig.getSelectedDevicesAddress().plus(action.address))
             }
             is DevicesAction.OnDeviceRemoved -> {
-
-                action.address
+                appConfig.setSelectedDevicesAddresses(appConfig.getSelectedDevicesAddress().minus(action.address))
             }
             else -> Unit
         }
