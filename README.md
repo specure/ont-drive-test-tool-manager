@@ -25,11 +25,12 @@ and sync gradle)
 
 1. Start the app
 2. grant all permissions, turn on bluetooth
-3. list of all paired bluetooth devices should be displayed
-4. firstly tap connect to device
-5. after a successful connect to a device with SignalTracker app you can see updating status
-6. put signal tracker in active track screen
-7. now you should be able to start and stop signal tracking on signal tracker app 
+3. select devices to be managed by app (must be paired first) and return back
+4. list of all selected devices should be displayed
+5. firstly tap connect to device
+6. after a successful connect to a device with SignalTracker app you can see updating status
+7. put signal tracker in active track screen
+8. now you should be able to start and stop signal tracking on signal tracker app 
 
 ## TODO:
 
