@@ -14,4 +14,6 @@ interface BluetoothServerService {
     fun startServer()
 
     fun stopServer()
+
+    fun setMeasurementProgressCallback(statusUpdate: () -> MeasurementProgress?)
 }

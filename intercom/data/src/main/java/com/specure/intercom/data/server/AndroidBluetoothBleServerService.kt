@@ -58,7 +58,7 @@ class AndroidBluetoothBleServerService(
         )
     }
 
-    fun setMeasurementProgressCallback(statusUpdate: () -> MeasurementProgress?) {
+    override fun setMeasurementProgressCallback(statusUpdate: () -> MeasurementProgress?) {
         this.getStatusUpdate = statusUpdate
     }
 

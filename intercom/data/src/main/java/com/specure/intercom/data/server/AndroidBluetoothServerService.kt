@@ -51,7 +51,7 @@ class AndroidBluetoothServerService(
     private val _receivedActionFlow = MutableSharedFlow<TrackerAction?>()
     override val receivedActionFlow: SharedFlow<TrackerAction?> get() = _receivedActionFlow
 
-    fun setMeasurementProgressCallback(statusUpdate: () -> MeasurementProgress?) {
+    override fun setMeasurementProgressCallback(statusUpdate: () -> MeasurementProgress?) {
         this.getStatusUpdate = statusUpdate
     }
 
