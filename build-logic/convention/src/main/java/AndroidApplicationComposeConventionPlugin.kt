@@ -9,6 +9,7 @@ class AndroidApplicationComposeConventionPlugin: Plugin<Project> {
         target.run {
             pluginManager.apply("signaltrackermanager.android.application")
             pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
+            pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
             val extension = extensions.getByType<ApplicationExtension>()
             configureAndroidCompose(extension)
         }

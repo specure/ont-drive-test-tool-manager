@@ -26,19 +26,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.cadrikmdev.intercom.domain.data.BluetoothDevice
 import com.specure.core.presentation.ui.toLocalTime
 import com.specure.core.presentation.designsystem.SignalTrackerManagerTheme
 import com.specure.core.presentation.designsystem.components.SignalTrackerManagerActionButton
 import com.specure.manager.presentation.R
-import com.specure.intercom.domain.client.TrackingDevice
-import com.specure.intercom.domain.data.MeasurementState
-import com.specure.intercom.presentation.mappers.toUiString
+import com.specure.manager.domain.intercom.data.MeasurementState
+import com.specure.manager.presentation.data.ManagedBluetoothDevice
+import com.specure.manager.presentation.mappers.toUiString
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 @Composable
 fun ManagedDeviceListItem(
-    trackingDeviceUi: TrackingDevice,
+    managedBluetoothDeviceUi: ManagedBluetoothDevice,
     onDeleteClick: (address: String) -> Unit,
     onStartClick: (address: String) -> Unit,
     onStopClick: (address: String) -> Unit,
@@ -67,11 +68,11 @@ fun ManagedDeviceListItem(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = trackingDeviceUi.name,
+                text = managedBluetoothDeviceUi.device.displayName,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = if (trackingDeviceUi.connected) {
+                text = if (managedBluetoothDeviceUi.device.connected) {
                     stringResource(id = R.string.connected)
                 } else {
                     stringResource(id = R.string.disconnected)
@@ -88,7 +89,7 @@ fun ManagedDeviceListItem(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = trackingDeviceUi.updateTimestamp.toDuration(DurationUnit.MILLISECONDS)
+                text = managedBluetoothDeviceUi.device.lastUpdatedTimestamp.toDuration(DurationUnit.MILLISECONDS)
                     .toLocalTime().toString() ?: "-",
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -102,7 +103,7 @@ fun ManagedDeviceListItem(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = trackingDeviceUi.deviceAppVersion,
+                text = managedBluetoothDeviceUi.deviceAppVersion,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
@@ -115,7 +116,7 @@ fun ManagedDeviceListItem(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = trackingDeviceUi.status.toUiString(),
+                text = managedBluetoothDeviceUi.status.toUiString(),
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
@@ -125,7 +126,7 @@ fun ManagedDeviceListItem(
         ) {
 
             SignalTrackerManagerActionButton(
-                text = if (trackingDeviceUi.connected) {
+                text = if (managedBluetoothDeviceUi.device.connected) {
                     stringResource(id = R.string.disconnect)
                 } else {
                     stringResource(id = R.string.connect)
@@ -133,23 +134,24 @@ fun ManagedDeviceListItem(
                 modifier = Modifier.weight(1.5f),
                 isLoading = false
             ) {
-                onConnectClick(trackingDeviceUi.address)
+                onConnectClick(managedBluetoothDeviceUi.device.address)
             }
             SignalTrackerManagerActionButton(
                 text = stringResource(id = R.string.start),
                 modifier = Modifier.weight(1f),
-                enabled = (trackingDeviceUi.connected && trackingDeviceUi.status !in listOf(MeasurementState.RUNNING, MeasurementState.NOT_ACTIVATED, MeasurementState.ERROR, MeasurementState.SPEEDTEST_ERROR)),
+                enabled = (managedBluetoothDeviceUi.device.connected && managedBluetoothDeviceUi.status !in listOf(
+                    MeasurementState.RUNNING, MeasurementState.NOT_ACTIVATED, MeasurementState.ERROR, MeasurementState.SPEEDTEST_ERROR)),
                 isLoading = false
             ) {
-                onStartClick(trackingDeviceUi.address)
+                onStartClick(managedBluetoothDeviceUi.device.address)
             }
             SignalTrackerManagerActionButton(
                 text = stringResource(id = R.string.stop),
                 modifier = Modifier.weight(1f),
-                enabled = (trackingDeviceUi.connected && trackingDeviceUi.status in listOf(MeasurementState.RUNNING, MeasurementState.ERROR, MeasurementState.SPEEDTEST_ERROR) && trackingDeviceUi.status != MeasurementState.NOT_ACTIVATED),
+                enabled = (managedBluetoothDeviceUi.device.connected && managedBluetoothDeviceUi.status in listOf(MeasurementState.RUNNING, MeasurementState.ERROR, MeasurementState.SPEEDTEST_ERROR) && managedBluetoothDeviceUi.status != MeasurementState.NOT_ACTIVATED),
                 isLoading = false
             ) {
-                onStopClick(trackingDeviceUi.address)
+                onStopClick(managedBluetoothDeviceUi.device.address)
             }
         }
     }
@@ -165,7 +167,7 @@ fun ManagedDeviceListItem(
             },
             onClick = {
                 showDropDown = false
-                onDeleteClick(trackingDeviceUi.name)
+                onDeleteClick(managedBluetoothDeviceUi.device.displayName)
             },
         )
     }
@@ -176,13 +178,13 @@ fun ManagedDeviceListItem(
 private fun RunListItemPreview() {
     SignalTrackerManagerTheme {
         ManagedDeviceListItem(
-            trackingDeviceUi = TrackingDevice(
-                name = "Telephone model name",
-                address = "47:51:53:55:88:56:FE",
+            managedBluetoothDeviceUi = ManagedBluetoothDevice(
+                device = BluetoothDevice(
+                    displayName = "Telephone model name",
+                    address = "47:51:53:55:88:56:FE",
+                ),
                 status = MeasurementState.IDLE,
-                connected = false,
                 deviceAppVersion = "1.3.0",
-                updateTimestamp = 15616561513
             ),
             onDeleteClick = { },
             onStartClick = { },

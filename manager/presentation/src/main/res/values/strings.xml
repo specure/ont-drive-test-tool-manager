@@ -26,8 +26,6 @@
     <string name="checking">Checking</string>
     <string name="download_failed">Download failed</string>
     <string name="downloading">Downloading</string>
-    <string name="error">Error</string>
-    <string name="idle">Idle</string>
     <string name="installing">Installing</string>
     <string name="new_version_found">New version found %1$s</string>
     <string name="no_new_version">No new version</string>
@@ -42,4 +40,12 @@
     <string name="paired_devices">Paired devices</string>
     <string name="refresh">Refresh</string>
     <string name="please_pair_tracking_device">Please pair a tracking device via bluetooth</string>
+
+    <string name="unknown">Unknown</string>
+    <string name="not_activated">Not activated</string>
+    <string name="idle">Idle</string>
+    <string name="started">Started</string>
+    <string name="running">Running</string>
+    <string name="error">Error</string>
+    <string name="speedtest_error">Speedtest error</string>
 </resources>

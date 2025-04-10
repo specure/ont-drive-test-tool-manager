@@ -48,7 +48,9 @@ dependencies {
     implementation(libs.bundles.koin)
 
     api(libs.core)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.feature.delivery.ktx)
+    implementation(projects.permissions.presentation)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -70,13 +72,14 @@ dependencies {
     implementation(projects.core.data)
     implementation(projects.core.presentation.designsystem)
     implementation(projects.core.presentation.ui)
+
     implementation(projects.manager.presentation)
     implementation(projects.manager.data)
     implementation(projects.manager.domain)
-    implementation(projects.permissions.presentation)
-    implementation(projects.intercom.presentation)
+
     implementation(projects.intercom.domain)
     implementation(projects.intercom.data)
+
     implementation(projects.updater.data)
     implementation(projects.updater.domain)
 

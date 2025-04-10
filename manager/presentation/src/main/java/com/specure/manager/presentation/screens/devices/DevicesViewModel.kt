@@ -8,9 +8,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cadrikmdev.intercom.domain.BluetoothDevicesProvider
+import com.cadrikmdev.intercom.domain.client.DeviceType
 import com.specure.core.domain.config.Config
-import com.specure.intercom.domain.BluetoothDevicesProvider
-import com.specure.intercom.domain.client.DeviceType
 import com.specure.manager.presentation.screens.devices.mappers.toBluetoothDeviceUi
 import com.specure.permissions.domain.PermissionHandler
 import com.specure.permissions.presentation.appPermissions
@@ -41,7 +41,7 @@ class DevicesViewModel(
     private fun manageBluetoothDevices() {
         if (permissionHandler.isPermissionGranted(Manifest.permission.BLUETOOTH_CONNECT)) {
 
-            val pairedDevicesFlow = bluetoothDevicesProvider.observePairedDevices(DeviceType.TRACKER)
+            val pairedDevicesFlow = bluetoothDevicesProvider.observePairedDevices(DeviceType.WORKER)
 
             pairedDevicesFlow.onEach { pairedDevices ->
                 val selectedDevicesAddresses = appConfig.getSelectedDevicesAddress()

@@ -233,11 +233,11 @@ private fun ManagerOverviewScreen(
                         items(
                             items = state.managedDevices,
                             key = {
-                                it.address
+                                it.device.address
                             }
                         ) {
                             ManagedDeviceListItem(
-                                trackingDeviceUi = it,
+                                managedBluetoothDeviceUi = it,
                                 onDeleteClick = { address ->
                                     onAction(
                                         ManagerOverviewAction.DeleteManager(

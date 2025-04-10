@@ -11,14 +11,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cadrikmdev.intercom.domain.BluetoothDevicesProvider
+import com.cadrikmdev.intercom.domain.client.BluetoothClientService
+import com.cadrikmdev.intercom.domain.service.BluetoothService
 import com.specure.core.domain.config.Config
-import com.specure.core.domain.service.BluetoothService
 import com.specure.core.presentation.ui.UiText
-import com.specure.intercom.domain.BluetoothDevicesProvider
-import com.specure.intercom.domain.client.BluetoothClientService
-import com.specure.intercom.domain.message.TrackerAction
 import com.specure.manager.presentation.BuildConfig
 import com.specure.manager.presentation.R
+import com.specure.manager.presentation.mappers.toManagedBluetoothDevice
 import com.specure.permissions.domain.PermissionHandler
 import com.specure.permissions.presentation.appPermissions
 import com.specure.updater.domain.Updater
@@ -26,6 +26,7 @@ import com.specure.updater.domain.UpdatingStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -83,16 +84,24 @@ class ManagerOverviewViewModel(
     private fun manageBluetoothDevices() {
         if (permissionHandler.isPermissionGranted(Manifest.permission.BLUETOOTH_CONNECT) && state.isBluetoothAdapterEnabled) {
 
-            bluetoothService.trackingDevices
-                .onEach { devices ->
+            bluetoothService.connectedBluetoothDevices
+                .map { devices ->
                     Timber.d("getting devices tracking devices: ${devices.values}")
                     val selectedDevicesAddresses = appConfig.getSelectedDevicesAddress()
-                    val managedDevices = devices.filter { device ->
-                        selectedDevicesAddresses.contains(device.value.address)
-                    }
+
+                    devices
+                        .filter { device ->
+                            selectedDevicesAddresses.contains(device.value.address)
+                        }
+                        .mapValues { (_, bluetoothDevice) ->
+                            bluetoothDevice.toManagedBluetoothDevice()
+                        }
+                }
+                .onEach { managedDevices ->
                     val previousState = state.copy()
                     val newErrorDevices = previousState.managedDevices.filter { prevDeviceState ->
                         managedDevices.filter { currentDeviceState ->
+                            //TODO: override tracking device with device with more details and use it on UI
                             currentDeviceState.value.isStateChangedOnTheSameDevice(prevDeviceState) && (currentDeviceState.value.isErrorState() || currentDeviceState.value.isSpeedTestErrorState())
                         }.isNotEmpty()
                     }
@@ -134,13 +143,15 @@ class ManagerOverviewViewModel(
 
             is ManagerOverviewAction.OnStartClick -> {
                 viewModelScope.launch {
-                    bluetoothService.sendActionFlow.emit(TrackerAction.StartTest(action.address))
+                    TODO("Create a new way of sending actions")
+//                    bluetoothService.sendActionFlow.emit(MessageWrapper.StartTest(action.address))
                 }
             }
 
             is ManagerOverviewAction.OnStopClick -> {
                 viewModelScope.launch {
-                    bluetoothService.sendActionFlow.emit(TrackerAction.StopTest(action.address))
+                    TODO("Create a new way of sending actions")
+//                    bluetoothService.sendActionFlow.emit(TrackerAction.StopTest(action.address))
                 }
             }
 

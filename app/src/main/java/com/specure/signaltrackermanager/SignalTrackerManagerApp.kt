@@ -3,11 +3,11 @@ package com.specure.signaltrackermanager
 import android.app.Application
 import android.content.Context
 import com.specure.core.data.di.coreDataModule
-import com.specure.intercom.data.di.intercomDataModule
 import com.specure.manager.presentation.di.managerPresentationModule
 import com.specure.permissions.presentation.di.permissionsModule
 import com.specure.signaltrackermanager.di.appModule
 import com.google.android.play.core.splitcompat.SplitCompat
+import com.specure.signaltrackermanager.di.appIntercomModule
 import com.specure.updater.data.di.updaterDataModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -31,9 +31,9 @@ class SignalTrackerManagerApp : Application() {
             androidLogger()
             androidContext(this@SignalTrackerManagerApp)
             modules(
+                appIntercomModule,
                 appModule,
                 coreDataModule,
-                intercomDataModule,
                 managerPresentationModule,
                 permissionsModule,
                 updaterDataModule,

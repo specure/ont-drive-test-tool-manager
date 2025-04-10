@@ -23,7 +23,6 @@ dependencies {
     implementation(projects.permissions.domain)
     implementation(projects.permissions.presentation)
     implementation(projects.updater.domain)
-    implementation(projects.intercom.presentation)
     implementation(projects.intercom.data)
 
     testImplementation(libs.junit)
