@@ -1,4 +1,4 @@
-package com.specure.manager.domain.intercom.data
+package com.specure.track.domain.intercom.data
 
 import com.specure.core.domain.util.Error
 

@@ -238,31 +238,31 @@ private fun ManagerOverviewScreen(
                         ) {
                             ManagedDeviceListItem(
                                 managedBluetoothDeviceUi = it,
-                                onDeleteClick = { address ->
+                                onDeleteClick = { device ->
                                     onAction(
                                         ManagerOverviewAction.DeleteManager(
-                                            address
+                                            device
                                         )
                                     )
                                 },
-                                onStopClick = { address ->
+                                onStopClick = { device ->
                                     onAction(
                                         ManagerOverviewAction.OnStopClick(
-                                            address
+                                            device
                                         )
                                     )
                                 },
-                                onStartClick = { address ->
+                                onStartClick = { device ->
                                     onAction(
                                         ManagerOverviewAction.OnStartClick(
-                                            address
+                                            device
                                         )
                                     )
                                 },
-                                onConnectClick = { address ->
+                                onConnectClick = { device ->
                                     onAction(
                                         ManagerOverviewAction.OnConnectClick(
-                                            address
+                                            device
                                         )
                                     )
                                 },

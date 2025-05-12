@@ -2,8 +2,8 @@ package com.specure.manager.presentation.mappers
 
 import androidx.compose.runtime.Composable
 import com.specure.core.presentation.ui.UiText
-import com.specure.manager.domain.intercom.data.MeasurementState
 import com.specure.manager.presentation.R
+import com.specure.track.domain.intercom.data.MeasurementState
 
 @Composable
 fun MeasurementState.toUiString(): String {

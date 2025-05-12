@@ -31,19 +31,19 @@ import com.specure.core.presentation.ui.toLocalTime
 import com.specure.core.presentation.designsystem.SignalTrackerManagerTheme
 import com.specure.core.presentation.designsystem.components.SignalTrackerManagerActionButton
 import com.specure.manager.presentation.R
-import com.specure.manager.domain.intercom.data.MeasurementState
 import com.specure.manager.presentation.data.ManagedBluetoothDevice
 import com.specure.manager.presentation.mappers.toUiString
+import com.specure.track.domain.intercom.data.MeasurementState
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 @Composable
 fun ManagedDeviceListItem(
     managedBluetoothDeviceUi: ManagedBluetoothDevice,
-    onDeleteClick: (address: String) -> Unit,
-    onStartClick: (address: String) -> Unit,
-    onStopClick: (address: String) -> Unit,
-    onConnectClick: (address: String) -> Unit,
+    onDeleteClick: (device: BluetoothDevice) -> Unit,
+    onStartClick: (device: BluetoothDevice) -> Unit,
+    onStopClick: (device: BluetoothDevice) -> Unit,
+    onConnectClick: (device: BluetoothDevice) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showDropDown by remember {
@@ -134,7 +134,7 @@ fun ManagedDeviceListItem(
                 modifier = Modifier.weight(1.5f),
                 isLoading = false
             ) {
-                onConnectClick(managedBluetoothDeviceUi.device.address)
+                onConnectClick(managedBluetoothDeviceUi.device)
             }
             SignalTrackerManagerActionButton(
                 text = stringResource(id = R.string.start),
@@ -143,7 +143,7 @@ fun ManagedDeviceListItem(
                     MeasurementState.RUNNING, MeasurementState.NOT_ACTIVATED, MeasurementState.ERROR, MeasurementState.SPEEDTEST_ERROR)),
                 isLoading = false
             ) {
-                onStartClick(managedBluetoothDeviceUi.device.address)
+                onStartClick(managedBluetoothDeviceUi.device)
             }
             SignalTrackerManagerActionButton(
                 text = stringResource(id = R.string.stop),
@@ -151,7 +151,7 @@ fun ManagedDeviceListItem(
                 enabled = (managedBluetoothDeviceUi.device.connected && managedBluetoothDeviceUi.status in listOf(MeasurementState.RUNNING, MeasurementState.ERROR, MeasurementState.SPEEDTEST_ERROR) && managedBluetoothDeviceUi.status != MeasurementState.NOT_ACTIVATED),
                 isLoading = false
             ) {
-                onStopClick(managedBluetoothDeviceUi.device.address)
+                onStopClick(managedBluetoothDeviceUi.device)
             }
         }
     }
@@ -167,7 +167,7 @@ fun ManagedDeviceListItem(
             },
             onClick = {
                 showDropDown = false
-                onDeleteClick(managedBluetoothDeviceUi.device.displayName)
+                onDeleteClick(managedBluetoothDeviceUi.device)
             },
         )
     }
@@ -184,6 +184,7 @@ private fun RunListItemPreview() {
                     address = "47:51:53:55:88:56:FE",
                 ),
                 status = MeasurementState.IDLE,
+                errors = null,
                 deviceAppVersion = "1.3.0",
             ),
             onDeleteClick = { },

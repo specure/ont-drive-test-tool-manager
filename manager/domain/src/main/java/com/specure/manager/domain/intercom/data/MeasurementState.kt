@@ -1,4 +1,4 @@
-package com.specure.manager.domain.intercom.data
+package com.specure.track.domain.intercom.data
 
 enum class MeasurementState {
     UNKNOWN,

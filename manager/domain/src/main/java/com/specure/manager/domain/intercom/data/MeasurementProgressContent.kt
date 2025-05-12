@@ -1,4 +1,4 @@
-package com.specure.manager.domain.intercom.data
+package com.specure.track.domain.intercom.data
 
 import com.cadrikmdev.intercom.domain.message.SerializableContent
 import kotlinx.serialization.Serializable
@@ -10,3 +10,9 @@ data class MeasurementProgressContent(
     val appVersion: String?,
     val timestamp: Long,
 ) : SerializableContent()
+
+@Serializable
+data object StartTestContent : SerializableContent()
+
+@Serializable
+data object StopTestContent : SerializableContent()
