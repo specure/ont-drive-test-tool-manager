@@ -1,3 +1,9 @@
+1.4.0
+----------------
+Shared module for intercom between manager and tracker app (change of the communication protocol)
+Updated libs
+Updated AGP to 8.9.2
+
 1.3.1
 ----------------
 Added selector to select devices to be managed
